@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Platform } from 'react-native';
-import Constants, { ExecutionEnvironment } from 'expo-constants';
 import {
     onAuthStateChanged,
     GoogleAuthProvider,
@@ -10,12 +9,10 @@ import {
 } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
 
-//const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
-
-let GoogleSignin = null;
+let GoogleSignIn = null;
 if (Platform.OS !== 'web') {
-    GoogleSignin = require('@react-native-google-signin/google-signin').GoogleSignin;
-    GoogleSignin.configure({
+    GoogleSignIn = require('@react-native-google-signin/google-signin').GoogleSignIn;
+    GoogleSignIn.configure({
         webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
     });
 }
@@ -42,8 +39,8 @@ export const useAuth = () => {
             //     return;
             
 
-            await GoogleSignin.hasPlayServices();
-            const userInfo = await GoogleSignin.signIn();
+            await GoogleSignIn.hasPlayServices();
+            const userInfo = await GoogleSignIn.signIn();
             const credential = GoogleAuthProvider.credential(userInfo.idToken);
             return await signInWithCredential(auth, credential);
 
@@ -54,8 +51,8 @@ export const useAuth = () => {
     };
 
     const logout = async () => {
-        if (Platform.OS !== 'web' && GoogleSignin) {
-            await GoogleSignin.signOut();
+        if (Platform.OS !== 'web' && GoogleSignIn) {
+            await GoogleSignIn.signOut();
         }
         return await signOut(auth);
     };
