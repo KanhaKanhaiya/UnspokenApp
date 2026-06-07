@@ -3,6 +3,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { Alert, Platform, StyleSheet, useWindowDimensions, View, TouchableOpacity, ScrollView, Text, TextInput, ActivityIndicator, Image } from 'react-native';
 // import { Platform } from 'react-native';
 import * as ExpoLocation from 'expo-location'
+import firestore from '@react-native-firebase/firestore';
+import { supabase } from '../../supabaseConfig';
 
 let MapView = null
 if (Platform.OS !== 'web') {
@@ -32,7 +34,7 @@ export default function Report() {
   };
 
   const isLarge = width > 768
-  const [animalStatus, setAnimalStatus] = useState("stray")
+  const [animalType, setAnimalType] = useState("stray")
   const [symptoms, setSymptoms] = useState('');
 
   const showImageOptions = () => {
@@ -115,6 +117,20 @@ export default function Report() {
     setIsAnalysing(true);
     setAIDiagnosis(null);
 
+    const pointLocation = `POINT(${location.longitude} ${location.latitude})`
+
+    const { data: reportData, error: dbError } = supabase.from('animal_reports').insert([
+      {
+        symptoms: symptoms,
+        type: animalType,
+        location: pointLocation,
+        image: ""
+      }
+    ])
+    .select()
+    .then((data) => {
+
+      console.log(data)
     setTimeout(() => {
       setAIDiagnosis({
         condition: 'Suspected cold',
@@ -122,10 +138,12 @@ export default function Report() {
         advice: [
           'Isolate. Do not try to kill it.'
         ],
-        ngoAlertStatus: animalStatus === 'stray' ? 'Kanpur Animal Welfare Trust' : 'N/A'
+        ngoAlertStatus: animalType === 'stray' ? 'Kanpur Animal Welfare Trust' : 'N/A'
       });
       setIsAnalysing(false);
     }, 1000);
+    })
+
   };
 
   return (
@@ -146,21 +164,21 @@ export default function Report() {
           <Text style={styles.cardHeader}>1. Select Animal Type</Text>
           <View style={styles.toggleRow}>
             <TouchableOpacity 
-              style={[styles.toggleOption, animalStatus === 'stray' && styles.toggleOptionActive]}
-              onPress={() => setAnimalStatus('stray')}
+              style={[styles.toggleOption, animalType === 'stray' && styles.toggleOptionActive]}
+              onPress={() => setAnimalType('stray')}
             >
               <View style={styles.toggleTextContainer}>
-                <Text style={[styles.toggleTitle, animalStatus === 'stray' && styles.toggleTitleActive]}>Stray</Text>
+                <Text style={[styles.toggleTitle, animalType === 'stray' && styles.toggleTitleActive]}>Stray</Text>
                 <Text style={styles.animalTypeDescription}>Alerts NGOs</Text>
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.toggleOption, animalStatus === 'pet' && styles.toggleOptionActive]}
-              onPress={() => setAnimalStatus('pet')}
+              style={[styles.toggleOption, animalType === 'pet' && styles.toggleOptionActive]}
+              onPress={() => setAnimalType('pet')}
             >
               <View style={styles.toggleTextContainer}>
-                <Text style={[styles.toggleTitle, animalStatus === 'pet' && styles.toggleTitleActive]}>Pet</Text>
+                <Text style={[styles.toggleTitle, animalType === 'pet' && styles.toggleTitleActive]}>Pet</Text>
                 <Text style={styles.animalTypeDescription}>Data will NOT be shared with NGOs unless you yourself do so.</Text>
               </View>
             </TouchableOpacity>
@@ -254,7 +272,7 @@ export default function Report() {
           {aiDiagnosis ? (
             <View style={styles.AIDiagnosisView}>
               <View style={styles.badgeRow}>
-                <View style={[styles.statusBadge, { backgroundColor: animalStatus === 'stray' ? '#FEE2E2' : '#FEF3C7' }]}>
+                <View style={[styles.statusBadge, { backgroundColor: animalType === 'stray' ? '#FEE2E2' : '#FEF3C7' }]}>
                   <Text style={[styles.statusBadgeText, { color: aiDiagnosis.confidence > 75 ? '#991B1B' : '#e06214' }]}>
                     {aiDiagnosis.confidence > 75 ? 'HIGH' : 'MEDIUM'}
                   </Text>
