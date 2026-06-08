@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
-import { Alert, Platform, StyleSheet, useWindowDimensions, View, TouchableOpacity, ScrollView, Text, TextInput, ActivityIndicator, Image } from 'react-native';
+import { Alert, Platform, StyleSheet, useWindowDimensions, View, TouchableOpacity, ScrollView, Text, TextInput, ActivityIndicator, Image, Button } from 'react-native';
 // import { Platform } from 'react-native';
 import * as ExpoLocation from 'expo-location'
 import firestore from '@react-native-firebase/firestore';
 import { supabase } from '../../supabaseConfig';
+import { router } from 'expo-router';
 
 let MapView = null
 if (Platform.OS !== 'web') {
@@ -160,6 +161,7 @@ export default function Report() {
             {/* TODO(Improve this motivational message and other texts) */}
           </Text>
         </View>
+        <Button onPress={() => router.navigate('/nearbyReports')} title="Nearby Reports" style={{ margin: 5 }} />
         <View style={styles.card}>
           <Text style={styles.cardHeader}>1. Select Animal Type</Text>
           <View style={styles.toggleRow}>

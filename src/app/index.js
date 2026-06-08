@@ -1,12 +1,14 @@
 import * as Device from "expo-device"
-import { StyleSheet } from "react-native"
+import { Button, StyleSheet, Text } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { BottomTabInset, MaxContentWidth, Spacing } from "@/constants/theme"
+import { useRouter } from "expo-router"
 
 export default function HomeScreen() {
+  const router = useRouter()
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -14,6 +16,7 @@ export default function HomeScreen() {
           <ThemedText type="title" style={styles.title}>
             Welcome to Unspoken
           </ThemedText>
+          <Button onPress={() => router.navigate('/signin')} title="Sign In" />
         </ThemedView>
         </SafeAreaView>
         </ThemedView>

@@ -9,8 +9,10 @@ import {
   Platform
 } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
+import { Button } from 'react-native-web';
+import { router } from 'expo-router';
 
-export default function App() {
+export default function SignIn() {
   const { user, loading, loginWithGoogle, logout } = useAuth();
   if (loading) {
     return (
@@ -28,6 +30,7 @@ export default function App() {
           <Text style={styles.title}>Welcome To Unspoken</Text>
           <Text style={styles.subtitle}>{user.displayName}</Text>
           <Text style={styles.subtitle}>{user.email}</Text>
+          <Button onPress={() => router.navigate('/report')} title="Report" />
           <TouchableOpacity style={styles.logoutButton} onPress={logout}>
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
