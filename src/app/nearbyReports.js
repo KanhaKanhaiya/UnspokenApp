@@ -6,9 +6,11 @@ import { FlatList, View, Text, StyleSheet,
   Image,
   Platform,
   ActivityIndicator,
-  useWindowDimensions } from "react-native";
+  useWindowDimensions, 
+  Button} from "react-native";
 import * as ExpoLocation from 'expo-location'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { router } from "expo-router";
 
 export default function NearbyReports() {
       const [loading, setLoading] = useState(true);
@@ -250,6 +252,7 @@ useEffect(() => {
                                                       <Text style={styles.distanceMetricText}>{rescue.distance} • </Text>
                                                       <Text style={styles.addressStringText} numberOfLines={1}>{rescue.address}</Text>
                                                     </View>
+                                                    <Button title="See details." onPress={() => router.navigate('/reports/' + selectedRescueID)} />
                                                   </View>
                                                 </TouchableOpacity>
                                               ))}
