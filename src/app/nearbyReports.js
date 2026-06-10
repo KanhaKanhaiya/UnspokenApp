@@ -1,89 +1,91 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../supabaseConfig";
-import { FlatList, View, Text, StyleSheet,
+import {
+  FlatList, View, Text, StyleSheet,
   ScrollView,
   TouchableOpacity,
   Image,
   Platform,
   ActivityIndicator,
-  useWindowDimensions, 
-  Button} from "react-native";
+  useWindowDimensions,
+  Button
+} from "react-native";
 import * as ExpoLocation from 'expo-location'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from "expo-router";
 
 export default function NearbyReports() {
-      const [loading, setLoading] = useState(true);
-    const [reports, setReports] = useState([])
+  const [loading, setLoading] = useState(true);
+  const [reports, setReports] = useState([])
 
-    const [location, setLocation] = useState({
-    latitude: 0, 
+  const [location, setLocation] = useState({
+    latitude: 0,
     longitude: 0
   });
 
-    useEffect(() => {
-        (async () => {
+  useEffect(() => {
+    (async () => {
 
-        
-        try {
-          let { status } = await ExpoLocation.requestForegroundPermissionsAsync();
-          if (status !== 'granted') {
-                if (Platform.OS === 'web')
+
+      try {
+        let { status } = await ExpoLocation.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          if (Platform.OS === 'web')
             alert("Location permission denied.")
           else
-          Alert.alert("Location permission denied.")
+            Alert.alert("Location permission denied.")
+          return;
+        }
+        let currentLoc = await ExpoLocation.getCurrentPositionAsync({});
+        setLocation({ ...location, longitude: currentLoc.coords.longitude, latitude: currentLoc.coords.latitude })
+        try {
+          //const { data: reportsData, error: reportsError } = await 
+          supabase.rpc('get_reports_nearby', {
+            user_lng: currentLoc.coords.longitude,
+            user_lat: currentLoc.coords.latitude,
+            radius_meters: 5000
+          }).then((data) => {
+            console.log(data)
+            setReports(data.data)
+            setLoading(false)
+          })
+
+          if (reportsError) {
             return;
+            // TODO(Add error handling)
           }
-          let currentLoc = await ExpoLocation.getCurrentPositionAsync({});
-          setLocation({ ...location, longitude: currentLoc.coords.longitude, latitude: currentLoc.coords.latitude })
-          try {
-            //const { data: reportsData, error: reportsError } = await 
-            supabase.rpc('get_reports_nearby', {
-                user_lng: currentLoc.coords.longitude,
-                user_lat: currentLoc.coords.latitude,
-                radius_meters: 5000
-            }).then((data) => {
-                console.log(data)
-                setReports(data.data)
-                setLoading(false)
-            })
 
-            if (reportsError) {
-                return;
-                // TODO(Add error handling)
-            }
+          console.log(reportsData)
+        } catch (error) { }
 
-            console.log(reportsData)
-        } catch (error) {}
-        
-        } catch (error) {
-          if (Platform.OS === 'web')
-            alert("Error in location detection.")
-          else
+      } catch (error) {
+        if (Platform.OS === 'web')
+          alert("Error in location detection.")
+        else
           Alert.alert("Error in location detection.")
         // TODO(Improve alert)
-        }
-        })()
-      }, [])
+      }
+    })()
+  }, [])
 
-        const { width } = useWindowDimensions();
-        const isLarge = width > 768;
+  const { width } = useWindowDimensions();
+  const isLarge = width > 768;
 
-        const [selectedRescueID, setSelectedRescueID] = useState(null);
+  const [selectedRescueID, setSelectedRescueID] = useState(null);
 
-    let MapView = null;
-let Marker = null;
-if (Platform.OS !== 'web') {
-  try {
-    const Maps = require('react-native-maps');
-    MapView = Maps.default;
-    Marker = Maps.Marker;
-  } catch (e) {
-//  TODO(Show Error)
+  let MapView = null;
+  let Marker = null;
+  if (Platform.OS !== 'web') {
+    try {
+      const Maps = require('react-native-maps');
+      MapView = Maps.default;
+      Marker = Maps.Marker;
+    } catch (e) {
+      //  TODO(Show Error)
+    }
   }
-}
 
-const generateWebMapHtml = () => {
+  const generateWebMapHtml = () => {
     return `
       <!DOCTYPE html>
       <html>
@@ -140,7 +142,7 @@ const generateWebMapHtml = () => {
     `;
   };
 
-useEffect(() => {
+  useEffect(() => {
     if (Platform.OS === 'web') {
       const handleWebMapMessage = (event) => {
         try {
@@ -161,105 +163,105 @@ useEffect(() => {
     : reports;
 
   if (loading) {
-      return (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#12ee25" />
-          <Text style={styles.loadingText}>Loading</Text>
-        </View>
-      );
-    }
-
     return (
-            <View style={styles.screen}>
-              <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-                <View style={[styles.contentLimiter, { maxWidth: isLarge ? 850 : '100%' }]}>
-                    <View style={styles.pageHeader}>
-                                <Text style={styles.pageTitle}>Nearby Rescues</Text>
-                                <Text style={styles.pageSubtitle}>Showing {reports.length} cases within 5 km</Text>
-                              </View>
-                <View style={[styles.mapCardWrapper, { height: isLarge ? 320 : 220 }]}>
-                            {Platform.OS === 'web' ? (
-                              React.createElement('iframe', {
-                                srcDoc: generateWebMapHtml(),
-                                style: { width: '100%', height: '100%', border: 'none' },
-                                title: "Nearby Rescues"
-                              })
-                            ) : (
-                              <MapView style={styles.nativeMapStyle} initialRegion={location}>
-                                <Marker coordinate={{ latitude: location.latitude, longitude: location.longitude }} zIndex={999}>
-                                  <View style={styles.userDotPulseContainer}>
-                                    <View style={styles.userPulseRing} />
-                                    <View style={styles.userCoreBlueDot} />
-                                  </View>
-                                </Marker>
-                
-                                {reports.map((report) => (
-                                  <Marker
-                                    key={report.id}
-                                    coordinate={{ latitude: report.latitude, longitude: report.longitude }}
-                                    onPress={() => setSelectedRescueID(report.id)}
-                                  >
-                                    <View style={[styles.customNativePin, report.status === 'Critical' && styles.criticalPinBg]}>
-                                      <MaterialCommunityIcons name="alert-circle" size={16} color="#FFF" />
-                                    </View>
-                                  </Marker>
-                                ))}
-                              </MapView>
-                            )}
-                
-                            {selectedRescueID && (
-                              <TouchableOpacity style={styles.clearFilterFloatingBtn} onPress={() => setSelectedRescueID(null)}>
-                                <Ionicons name="eye-outline" size={14} color="#1F2937" />
-                                <Text style={styles.clearFilterText}>Show All</Text>
-                              </TouchableOpacity>
-                            )}
-                          </View>
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#12ee25" />
+        <Text style={styles.loadingText}>Loading</Text>
+      </View>
+    );
+  }
 
-                                    <View style={styles.feedHeaderRow}>
-                                      <Text style={styles.feedTitle}>
-                                        {selectedRescueID ? 'Selected Case' : 'All Active Rescues'}
-                                      </Text>
-                                      <View style={styles.counterBadge}>
-                                        <View style={styles.pulsingDot} />
-                                        <Text style={styles.counterBadgeText}>{displayedRescues.length} Active</Text>
-                                      </View>
-                                    </View>
+  return (
+    <View style={styles.screen}>
+      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <View style={[styles.contentLimiter, { maxWidth: isLarge ? 850 : '100%' }]}>
+          <View style={styles.pageHeader}>
+            <Text style={styles.pageTitle}>Nearby Rescues</Text>
+            <Text style={styles.pageSubtitle}>Showing {reports.length} cases within 5 km</Text>
+          </View>
+          <View style={[styles.mapCardWrapper, { height: isLarge ? 320 : 220 }]}>
+            {Platform.OS === 'web' ? (
+              React.createElement('iframe', {
+                srcDoc: generateWebMapHtml(),
+                style: { width: '100%', height: '100%', border: 'none' },
+                title: "Nearby Rescues"
+              })
+            ) : (
+              <MapView style={styles.nativeMapStyle} initialRegion={location}>
+                <Marker coordinate={{ latitude: location.latitude, longitude: location.longitude }} zIndex={999}>
+                  <View style={styles.userDotPulseContainer}>
+                    <View style={styles.userPulseRing} />
+                    <View style={styles.userCoreBlueDot} />
+                  </View>
+                </Marker>
 
-                                    {displayedRescues.map((rescue) => (
-                                                <TouchableOpacity 
-                                                  key={rescue.id} 
-                                                  activeOpacity={0.9} 
-                                                  style={[styles.rescueFeedCard, selectedRescueID === rescue.id && styles.highlightedCardBorder]}
-                                                  onPress={() => setSelectedRescueID(rescue.id)}
-                                                >
-                                                  <Image source={{ uri: rescue.image }} style={styles.rescueThumb} />
-                                                  
-                                                  <View style={styles.cardDetailsBox}>
-                                                    <View style={styles.badgeLine}>
-                                                      <View style={[styles.statusIndicatorTag, rescue.status === 'Critical' ? styles.tagRed : styles.tagAmber]}>
-                                                        <Text style={[styles.tagText, styles.textRed ]}>
-                                                          {rescue.status}
-                                                        </Text>
-                                                      </View>
-                                                      <Text style={styles.timeLabelText}>{rescue.time}</Text>
-                                                    </View>
-                                    
-                                                    <Text style={styles.incidentHeadline} numberOfLines={1}>{rescue.title}</Text>
-                                                    <Text style={styles.symptomSummaryText} numberOfLines={2}>{rescue.symptoms}</Text>
-                                                    
-                                                    <View style={styles.locationFooterMeta}>
-                                                      <Ionicons name="location-outline" size={14} color="#6B7280" />
-                                                      <Text style={styles.distanceMetricText}>{rescue.distance} • </Text>
-                                                      <Text style={styles.addressStringText} numberOfLines={1}>{rescue.address}</Text>
-                                                    </View>
-                                                    <Button title="See details." onPress={() => router.navigate('/reports/' + rescue.id)} />
-                                                  </View>
-                                                </TouchableOpacity>
-                                              ))}
-                                              </View>
-                                              </ScrollView>
-                
-        {/* <View style={{ flex: 1, padding: 20 }}>
+                {reports.map((report) => (
+                  <Marker
+                    key={report.id}
+                    coordinate={{ latitude: report.latitude, longitude: report.longitude }}
+                    onPress={() => setSelectedRescueID(report.id)}
+                  >
+                    <View style={[styles.customNativePin, report.status === 'Critical' && styles.criticalPinBg]}>
+                      <MaterialCommunityIcons name="alert-circle" size={16} color="#FFF" />
+                    </View>
+                  </Marker>
+                ))}
+              </MapView>
+            )}
+
+            {selectedRescueID && (
+              <TouchableOpacity style={styles.clearFilterFloatingBtn} onPress={() => setSelectedRescueID(null)}>
+                <Ionicons name="eye-outline" size={14} color="#1F2937" />
+                <Text style={styles.clearFilterText}>Show All</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View style={styles.feedHeaderRow}>
+            <Text style={styles.feedTitle}>
+              {selectedRescueID ? 'Selected Case' : 'All Active Rescues'}
+            </Text>
+            <View style={styles.counterBadge}>
+              <View style={styles.pulsingDot} />
+              <Text style={styles.counterBadgeText}>{displayedRescues.length} Active</Text>
+            </View>
+          </View>
+
+          {displayedRescues.map((rescue) => (
+            <TouchableOpacity
+              key={rescue.id}
+              activeOpacity={0.9}
+              style={[styles.rescueFeedCard, selectedRescueID === rescue.id && styles.highlightedCardBorder]}
+              onPress={() => setSelectedRescueID(rescue.id)}
+            >
+              <Image source={{ uri: rescue.image }} style={styles.rescueThumb} />
+
+              <View style={styles.cardDetailsBox}>
+                <View style={styles.badgeLine}>
+                  <View style={[styles.statusIndicatorTag, rescue.status === 'Critical' ? styles.tagRed : styles.tagAmber]}>
+                    <Text style={[styles.tagText, styles.textRed]}>
+                      {rescue.status}
+                    </Text>
+                  </View>
+                  <Text style={styles.timeLabelText}>{rescue.time}</Text>
+                </View>
+
+                <Text style={styles.incidentHeadline} numberOfLines={1}>{rescue.title}</Text>
+                <Text style={styles.symptomSummaryText} numberOfLines={2}>{rescue.symptoms}</Text>
+
+                <View style={styles.locationFooterMeta}>
+                  <Ionicons name="location-outline" size={14} color="#6B7280" />
+                  <Text style={styles.distanceMetricText}>{rescue.distance} • </Text>
+                  <Text style={styles.addressStringText} numberOfLines={1}>{rescue.address}</Text>
+                </View>
+                <Button title="See details." onPress={() => router.navigate('/reports/' + rescue.id)} />
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+
+      {/* <View style={{ flex: 1, padding: 20 }}>
             <FlatList
             data={reports}
             keyExtractor={(item) => item.id}
@@ -270,18 +272,18 @@ useEffect(() => {
                 )}
                 />
         </View> */}
-                </View>
-    )
+    </View>
+  )
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#F9FAFB' },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F9FAFB' },
   loadingText: { marginTop: 12, fontSize: 14, color: '#4B5563', fontWeight: '600' },
-  
+
   scrollContainer: { alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16 },
   contentLimiter: { width: '100%' },
-  
+
   pageHeader: { marginBottom: 16, paddingHorizontal: 4 },
   pageTitle: { fontSize: 24, fontWeight: '800', color: '#111827' },
   pageSubtitle: { fontSize: 14, color: '#6B7280', marginTop: 2 },
@@ -301,7 +303,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   nativeMapStyle: { width: '100%', height: '100%' },
-  
+
   clearFilterFloatingBtn: {
     position: 'absolute', bottom: 12, right: 12, backgroundColor: '#FFFFFF',
     flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 14,
@@ -309,19 +311,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15, shadowRadius: 4, elevation: 4, zIndex: 10
   },
   clearFilterText: { marginLeft: 6, fontSize: 13, fontWeight: '700', color: '#1F2937' },
-  
+
   customNativePin: { backgroundColor: '#F59E0B', padding: 6, borderRadius: 20, borderWidth: 2, borderColor: '#FFFFFF' },
   criticalPinBg: { backgroundColor: '#EF4444' },
   userDotPulseContainer: { alignItems: 'center', justifyContent: 'center' },
   userCoreBlueDot: { width: 14, height: 14, borderRadius: 7, backgroundColor: '#3B82F6', borderWidth: 2, borderColor: '#FFFFFF' },
   userPulseRing: { position: 'absolute', width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(59, 130, 246, 0.24)' },
-  
+
   feedHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingHorizontal: 4 },
   feedTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },
   counterBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ECFDF5', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 },
   pulsingDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981', marginRight: 6 },
   counterBadgeText: { fontSize: 12, fontWeight: '700', color: '#065F46' },
-  
+
   rescueFeedCard: { backgroundColor: '#FFFFFF', borderRadius: 16, flexDirection: 'row', padding: 12, marginBottom: 14, borderWidth: 1, borderColor: '#F3F4F6', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 2 },
   highlightedCardBorder: { borderColor: '#818CF8', backgroundColor: '#FAFAFF', borderWidth: 1.5 },
   rescueThumb: { width: 85, height: 85, borderRadius: 12, backgroundColor: '#E5E7EB' },

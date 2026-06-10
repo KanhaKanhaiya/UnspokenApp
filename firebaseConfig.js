@@ -1,13 +1,15 @@
 import { initializeApp } from 'firebase/app';
-import { 
-  initializeAuth, 
-  getReactNativePersistence, 
+import {
+  initializeAuth,
+  getReactNativePersistence,
   browserLocalPersistence,
   getAuth
 } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { getDatabase } from 'firebase/database';
+import { getAI, getGenerativeModel, GoogleAIBackend, Schema } from "firebase/ai";
+import { installAbortSignalPolyfill } from 'abort-signal-polyfill';
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -21,10 +23,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
+installAbortSignalPolyfill()
+
 let auth;
 
 if (Platform.OS === 'web') {
-  auth = getAuth(app); 
+  auth = getAuth(app);
 } else {
   auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage),
@@ -33,4 +37,26 @@ if (Platform.OS === 'web') {
 
 const database = getDatabase(app);
 
-export { auth, database };
+const ai = getAI(app, { backend: new GoogleAIBackend() });
+
+      const jsonSchema = Schema.object({
+ properties: {
+    characters: Schema.array({
+      items: Schema.object({
+        properties: {
+          condition: Schema.string(),
+          confidence: Schema.number(),
+          advice: Schema.string(),
+          ngoAlertStatus: Schema.string(),
+        },
+      }),
+    }),
+  }
+});
+
+const model = getGenerativeModel(ai, { model: "gemini-3.1-flash-lite", generationConfig: {
+    responseMimeType: "application/json",
+    responseSchema: jsonSchema
+  }, });
+
+export { auth, database, model };

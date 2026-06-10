@@ -11,6 +11,7 @@
     "@react-native-firebase/firestore": "^24.1.0",
     "@react-native-google-signin/google-signin": "^16.1.2",
     "@supabase/supabase-js": "^2.107.0",
+    "abort-signal-polyfill": "^1.0.0",
     "expo": "~56.0.9",
     "expo-constants": "~56.0.17",
     "expo-dev-client": "~56.0.19",

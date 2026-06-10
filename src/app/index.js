@@ -18,11 +18,11 @@ export default function HomeScreen() {
           </ThemedText>
           <Button onPress={() => router.navigate('/signin')} title="Sign In" />
         </ThemedView>
-        </SafeAreaView>
-        </ThemedView>
-      // <SafeAreaView style={styles.safeArea}>
-      /* </SafeAreaView> */
-    
+      </SafeAreaView>
+    </ThemedView>
+    // <SafeAreaView style={styles.safeArea}>
+    /* </SafeAreaView> */
+
   )
 }
 
