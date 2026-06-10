@@ -40,29 +40,29 @@ export default function Report() {
 
   const showImageOptions = () => {
     if (Platform.OS === 'web') selectImage()
-      else
-    Alert.alert(
-      "Upload Animal Photo",
-      "Choose one :",
-      [
-        {
-          text: "Take new photo", onPress: selectImage
-        },
-        {
-          text: "Select Existing Image", onPress: selectImage
-        },
-        {
-          text: "Cancel", style: "cancel"
-        }
-      ],
-      { cancelable: true }
-    )
+    else
+      Alert.alert(
+        "Upload Animal Photo",
+        "Choose one :",
+        [
+          {
+            text: "Take new photo", onPress: selectImage
+          },
+          {
+            text: "Select Existing Image", onPress: selectImage
+          },
+          {
+            text: "Cancel", style: "cancel"
+          }
+        ],
+        { cancelable: true }
+      )
   }
 
   const [isLocating, setIsLocating] = useState(false);
   const [address, setAddress] = useState('');
   const [location, setLocation] = useState({
-    latitude: 0, 
+    latitude: 0,
     longitude: 0,
     latitudeDelta: 0,
     longitudeDelta: 0,
@@ -75,10 +75,10 @@ export default function Report() {
       if (status !== 'granted') {
         setAddress('');
         setIsLocating(false);
-            if (Platform.OS === 'web')
-        alert("Location permission denied.")
-      else
-      Alert.alert("Location permission denied.")
+        if (Platform.OS === 'web')
+          alert("Location permission denied.")
+        else
+          Alert.alert("Location permission denied.")
         return;
       }
       let currentLoc = await ExpoLocation.getCurrentPositionAsync({});
@@ -89,21 +89,21 @@ export default function Report() {
         longitudeDelta: 0.01,
       };
       setLocation(coords);
-      
+
       if (Platform.OS !== 'web') {
-      let geocode = await ExpoLocation.reverseGeocodeAsync(coords);
-      if (geocode.length > 0) {
-        const place = geocode[0];
-        setAddress(`${place.name || ''}, ${place.city || place.subregion}, ${place.region || ''}`);
+        let geocode = await ExpoLocation.reverseGeocodeAsync(coords);
+        if (geocode.length > 0) {
+          const place = geocode[0];
+          setAddress(`${place.name || ''}, ${place.city || place.subregion}, ${place.region || ''}`);
+        }
       }
-    }
     } catch (error) {
       setAddress('');
       if (Platform.OS === 'web')
         alert("Error in location detection.")
       else
-      Alert.alert("Error in location detection.")
-    // TODO(Improve alert)
+        Alert.alert("Error in location detection.")
+      // TODO(Improve alert)
     }
     setIsLocating(false);
   };
@@ -128,48 +128,48 @@ export default function Report() {
         image: ""
       }
     ])
-    .select()
-    .then((data) => {
-      fetch(imageUri).then((response) => {
-        response.blob().then((imageBlob) => {
-supabase.storage.from('unspokenStorage').upload(`animalImages/${data.data[0].id}`, imageBlob, {
-        contentType: 'image/jpeg'
-        //TODO(Secuity risk.)
-      }).then(async (data2) => {
-        await supabase.from('animal_reports').update({ image: supabase.storage.from('unspokenStorage').getPublicUrl(data2.data.path).data.publicUrl }).eq('id', data.data[0].id)
-        //TODO(Fix this long route to add image url.)
-        setTimeout(() => {
-      setAIDiagnosis({
-        condition: 'Suspected cold',
-        confidence: 0,
-        advice: [
-          'Isolate. Do not try to kill it.'
-        ],
-        ngoAlertStatus: animalType === 'stray' ? 'Kanpur Animal Welfare Trust' : 'N/A'
-      });
-      setIsAnalysing(false);
-    }, 1000);
-      })
+      .select()
+      .then((data) => {
+        fetch(imageUri).then((response) => {
+          response.blob().then((imageBlob) => {
+            supabase.storage.from('unspokenStorage').upload(`animalImages/${data.data[0].id}`, imageBlob, {
+              contentType: 'image/jpeg'
+              //TODO(Secuity risk.)
+            }).then(async (data2) => {
+              await supabase.from('animal_reports').update({ image: supabase.storage.from('unspokenStorage').getPublicUrl(data2.data.path).data.publicUrl }).eq('id', data.data[0].id)
+              //TODO(Fix this long route to add image url.)
+              setTimeout(() => {
+                setAIDiagnosis({
+                  condition: 'Suspected cold',
+                  confidence: 0,
+                  advice: [
+                    'Isolate. Do not try to kill it.'
+                  ],
+                  ngoAlertStatus: animalType === 'stray' ? 'Kanpur Animal Welfare Trust' : 'N/A'
+                });
+                setIsAnalysing(false);
+              }, 1000);
+            })
+          })
         })
+
+        console.log(data)
+
       })
-      
-      console.log(data)
-    
-    })
 
   };
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
       <View style={[styles.layout, { maxWidth: isLarge ? 850 : '100%' }]}>
-<View style={styles.headerView}>
+        <View style={styles.headerView}>
           <View style={styles.versionInfo}>
             {/* TODO(Add icons for better UI) */}
             <Text style={styles.versionInfoText}>Unspoken version 0.0.1</Text>
           </View>
           <Text style={styles.title}>Report</Text>
           <Text style={styles.subtitle}>
-            Report animals for their welfare 
+            Report animals for their welfare
             {/* TODO(Improve this motivational message and other texts) */}
           </Text>
         </View>
@@ -177,7 +177,7 @@ supabase.storage.from('unspokenStorage').upload(`animalImages/${data.data[0].id}
         <View style={styles.card}>
           <Text style={styles.cardHeader}>1. Select Animal Type</Text>
           <View style={styles.toggleRow}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.toggleOption, animalType === 'stray' && styles.toggleOptionActive]}
               onPress={() => setAnimalType('stray')}
             >
@@ -187,7 +187,7 @@ supabase.storage.from('unspokenStorage').upload(`animalImages/${data.data[0].id}
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.toggleOption, animalType === 'pet' && styles.toggleOptionActive]}
               onPress={() => setAnimalType('pet')}
             >
@@ -200,36 +200,36 @@ supabase.storage.from('unspokenStorage').upload(`animalImages/${data.data[0].id}
         </View>
         <View style={[styles.gridRow, { flexDirection: isLarge ? 'row' : 'column' }]}></View>
         <View style={[styles.card, { flex: 1 }]}>
-            <Text style={styles.cardHeader}>2. Upload Photo</Text>
-            <TouchableOpacity style={styles.uploadContainer} onPress={showImageOptions}>
-              {imageUri ? (
-                <View style={styles.imageWrap}>
-                  <Image source={{ uri: imageUri }} style={styles.uploadedPreview} />
-                  <View style={styles.imageOverlay}><Text style={styles.overlayText}>Change Photo</Text></View>
-                </View>
-              ) : (
-                <View style={styles.uploadPlaceholder}>
-                  <Text style={styles.uploadMainText}>Click to capture or upload image</Text>
-                  <Text style={styles.uploadSubText}>Provide clear image of injured animal</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
-          
-          <View style={[styles.card, { flex: 1 }]}>
-            <Text style={styles.cardHeader}>3. Describe Symptoms</Text>
-            <TextInput
-              style={styles.textArea}
-              placeholder="Example: Destroyed body, damaged head, coughing, vomiting blood etc."
-              placeholderTextColor="#9CA3AF"
-              multiline
-              numberOfLines={2}
-              value={symptoms}
-              onChangeText={setSymptoms}
-            />
-          </View>
+          <Text style={styles.cardHeader}>2. Upload Photo</Text>
+          <TouchableOpacity style={styles.uploadContainer} onPress={showImageOptions}>
+            {imageUri ? (
+              <View style={styles.imageWrap}>
+                <Image source={{ uri: imageUri }} style={styles.uploadedPreview} />
+                <View style={styles.imageOverlay}><Text style={styles.overlayText}>Change Photo</Text></View>
+              </View>
+            ) : (
+              <View style={styles.uploadPlaceholder}>
+                <Text style={styles.uploadMainText}>Click to capture or upload image</Text>
+                <Text style={styles.uploadSubText}>Provide clear image of injured animal</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
 
-          <View style={styles.card}>
+        <View style={[styles.card, { flex: 1 }]}>
+          <Text style={styles.cardHeader}>3. Describe Symptoms</Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="Example: Destroyed body, damaged head, coughing, vomiting blood etc."
+            placeholderTextColor="#9CA3AF"
+            multiline
+            numberOfLines={2}
+            value={symptoms}
+            onChangeText={setSymptoms}
+          />
+        </View>
+
+        <View style={styles.card}>
           <View style={styles.locationHeaderRow}>
             <Text style={styles.cardHeader}>4. Rescue Location</Text>
             <TouchableOpacity style={styles.locateButton} onPress={locateMe}>
@@ -243,7 +243,7 @@ supabase.storage.from('unspokenStorage').upload(`animalImages/${data.data[0].id}
             </TouchableOpacity>
           </View>
 
-          <TextInput 
+          <TextInput
             style={styles.addressInput}
             value={address}
             onChangeText={setAddress}
@@ -264,7 +264,7 @@ supabase.storage.from('unspokenStorage').upload(`animalImages/${data.data[0].id}
           </View>
         </View>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.actionBtn, !checkValidity && styles.actionButtonDisabled]}
           disabled={!checkValidity || isAnalyzing}
           onPress={handleSendAlert}
@@ -282,7 +282,7 @@ supabase.storage.from('unspokenStorage').upload(`animalImages/${data.data[0].id}
           <View style={styles.AIHeader}>
             <Text style={styles.AITitle}>AI Analysis</Text>
           </View>
-{/* TODO(Add AI inaccuracy warning) */}
+          {/* TODO(Add AI inaccuracy warning) */}
           {aiDiagnosis ? (
             <View style={styles.AIDiagnosisView}>
               <View style={styles.badgeRow}>
@@ -297,7 +297,7 @@ supabase.storage.from('unspokenStorage').upload(`animalImages/${data.data[0].id}
               </View>
 
               <Text style={styles.conditionHeadline}>{aiDiagnosis.condition}</Text>
-              
+
               <Text style={styles.sectionHeader}>Immediate Actions:</Text>
               {aiDiagnosis.advice.map((item, index) => (
                 <View key={index} style={styles.bulletRow}>
@@ -320,7 +320,7 @@ supabase.storage.from('unspokenStorage').upload(`animalImages/${data.data[0].id}
             </View>
           )}
         </View>
-        </View></ScrollView>
+      </View></ScrollView>
   )
 }
 
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#111827',
     marginBottom: 12,
-    
+
   },
   mapFrame: {
     height: 180,

@@ -34,20 +34,20 @@ export default function RescueDetails() {
     //TODO(Add null check and protection)
 
     const [reportData, setReportData] = useState({
-  id: id,
-  status: 'ACTIVE',
-  date: '',
-  latitude: 0,
-  longitude: 0,
-  symptoms: '',
-  aiDiagnosis: {
-    happened: '',
-    firstAid: [
-      ''
-    ]
-  },
-  ngos: ['']
-});
+        id: id,
+        status: 'ACTIVE',
+        date: '',
+        latitude: 0,
+        longitude: 0,
+        symptoms: '',
+        aiDiagnosis: {
+            happened: '',
+            firstAid: [
+                ''
+            ]
+        },
+        ngos: ['']
+    });
 
     const [location, setLocation] = useState(null);
     const [recentMessages, setRecentMessages] = useState([]);
@@ -175,7 +175,7 @@ export default function RescueDetails() {
 
                     <View style={styles.card}>
                         <View style={styles.cardHeaderRow}>
-                       
+
                             <Text style={styles.cardTitle}>AI Diagnosis</Text>
                         </View>
                     </View>

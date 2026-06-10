@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
-import { 
-  initializeAuth, 
-  getReactNativePersistence, 
+import {
+  initializeAuth,
+  getReactNativePersistence,
   browserLocalPersistence,
   getAuth
 } from 'firebase/auth';
@@ -24,7 +24,7 @@ const app = initializeApp(firebaseConfig);
 let auth;
 
 if (Platform.OS === 'web') {
-  auth = getAuth(app); 
+  auth = getAuth(app);
 } else {
   auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage),
