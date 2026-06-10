@@ -6,6 +6,8 @@ import * as ExpoLocation from 'expo-location'
 import firestore from '@react-native-firebase/firestore';
 import { supabase } from '../../supabaseConfig';
 import { router } from 'expo-router';
+import { model } from '../../firebaseConfig';
+import { Schema } from 'firebase/ai';
 
 let MapView = null
 if (Platform.OS !== 'web') {
@@ -114,6 +116,17 @@ export default function Report() {
 
   const [aiDiagnosis, setAIDiagnosis] = useState(null);
 
+  async function fileToGenerativePart(file) {
+  const base64EncodedDataPromise = new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(',')[1]);
+    reader.readAsDataURL(file);
+  });
+  return {
+    inlineData: { data: await base64EncodedDataPromise, mimeType: file.type },
+  };
+}
+
   const handleSendAlert = () => {
     setIsAnalysing(true);
     setAIDiagnosis(null);
@@ -138,17 +151,18 @@ export default function Report() {
             }).then(async (data2) => {
               await supabase.from('animal_reports').update({ image: supabase.storage.from('unspokenStorage').getPublicUrl(data2.data.path).data.publicUrl }).eq('id', data.data[0].id)
               //TODO(Fix this long route to add image url.)
-              setTimeout(() => {
-                setAIDiagnosis({
-                  condition: 'Suspected cold',
-                  confidence: 0,
-                  advice: [
-                    'Isolate. Do not try to kill it.'
-                  ],
-                  ngoAlertStatus: animalType === 'stray' ? 'Kanpur Animal Welfare Trust' : 'N/A'
-                });
+
+              const imagePart = await fileToGenerativePart(new File([imageBlob], "animalImage.jpg", { type: imageBlob.type }))
+
+              const geminiResponse = await model.generateContent(["Imagine that you are an excellent vet. DO NOT STATE that You are an AI. State steps to cure it with suspected illness/injury etc.", imagePart])
+              //TODO(Add error handling if response is not evaluated.)
+              //TODO(Security risk. Move Gemini API Implementation to backend.)
+              //setTimeout(() => {
+                console.log(JSON.parse(geminiResponse.response.text())["characters"][0])
+                setAIDiagnosis(JSON.parse(geminiResponse.response.text())["characters"][0]);
+                setAIDiagnosis({ ...aiDiagnosis, confidence: aiDiagnosis.confidence*100 })
                 setIsAnalysing(false);
-              }, 1000);
+              //}, 1000);
             })
           })
         })
@@ -299,12 +313,14 @@ export default function Report() {
               <Text style={styles.conditionHeadline}>{aiDiagnosis.condition}</Text>
 
               <Text style={styles.sectionHeader}>Immediate Actions:</Text>
-              {aiDiagnosis.advice.map((item, index) => (
+              {/* {aiDiagnosis.advice.map((item, index) => (
                 <View key={index} style={styles.bulletRow}>
                   <Text style={styles.bulletDot}>•</Text>
                   <Text style={styles.bulletText}>{item}</Text>
                 </View>
-              ))}
+              ))} */}
+
+              <Text>{aiDiagnosis.advice}</Text>
 
               <View style={styles.ngoTrackerCard}>
                 <Text style={styles.ngoTrackerText}>
