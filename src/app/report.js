@@ -130,9 +130,15 @@ export default function Report() {
     ])
     .select()
     .then((data) => {
-
-      console.log(data)
-    setTimeout(() => {
+      fetch(imageUri).then((response) => {
+        response.blob().then((imageBlob) => {
+supabase.storage.from('unspokenStorage').upload(`animalImages/${data.data[0].id}`, imageBlob, {
+        contentType: 'image/jpeg'
+        //TODO(Secuity risk.)
+      }).then(async (data2) => {
+        await supabase.from('animal_reports').update({ image: supabase.storage.from('unspokenStorage').getPublicUrl(data2.data.path).data.publicUrl }).eq('id', data.data[0].id)
+        //TODO(Fix this long route to add image url.)
+        setTimeout(() => {
       setAIDiagnosis({
         condition: 'Suspected cold',
         confidence: 0,
@@ -143,6 +149,12 @@ export default function Report() {
       });
       setIsAnalysing(false);
     }, 1000);
+      })
+        })
+      })
+      
+      console.log(data)
+    
     })
 
   };

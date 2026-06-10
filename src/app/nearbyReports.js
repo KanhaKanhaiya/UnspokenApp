@@ -252,7 +252,7 @@ useEffect(() => {
                                                       <Text style={styles.distanceMetricText}>{rescue.distance} • </Text>
                                                       <Text style={styles.addressStringText} numberOfLines={1}>{rescue.address}</Text>
                                                     </View>
-                                                    <Button title="See details." onPress={() => router.navigate('/reports/' + selectedRescueID)} />
+                                                    <Button title="See details." onPress={() => router.navigate('/reports/' + rescue.id)} />
                                                   </View>
                                                 </TouchableOpacity>
                                               ))}
