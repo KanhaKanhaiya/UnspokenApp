@@ -14,6 +14,7 @@ import * as Location from 'expo-location';
 import { auth, database } from '../../../../firebaseConfig';
 import { ref, query, orderByChild, limitToLast, onValue } from 'firebase/database';
 import { router, useLocalSearchParams } from 'expo-router';
+import { supabase } from '../../../../supabaseConfig';
 
 let MapView = null;
 let Marker = null;
@@ -32,7 +33,7 @@ export default function RescueDetails() {
     const { id } = useLocalSearchParams()
     //TODO(Add null check and protection)
 
-    const reportData = {
+    const [reportData, setReportData] = useState({
   id: id,
   status: 'ACTIVE',
   date: '',
@@ -46,7 +47,7 @@ export default function RescueDetails() {
     ]
   },
   ngos: ['']
-};
+});
 
     const [location, setLocation] = useState(null);
     const [recentMessages, setRecentMessages] = useState([]);
@@ -64,6 +65,15 @@ export default function RescueDetails() {
             }
         })();
     }, []);
+
+    useEffect(() => {
+        supabase.rpc('get_animal_reports_by_id', {
+            report_id: id
+        }).then((data) => {
+            console.log(data.data[0])
+            setReportData(data.data[0])
+        })
+    }, [])
 
     useEffect(() => {
         const messagesRef = ref(database, `messages/${reportData.id}`);
