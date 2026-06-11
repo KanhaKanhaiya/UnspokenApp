@@ -7,3 +7,6 @@
 - [ ] Live tracking.
 - [ ] Move high risk features to backend.
 - [ ] Gemini api integration
+- [ ] Nearby clinic direct cobtact.
+- [ ] List of nearby free NGOs.
+- [ ] Home Remedy.
