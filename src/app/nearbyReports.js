@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { supabase } from "../../../supabaseConfig";
+import { supabase } from "../../supabaseConfig";
 import {
   FlatList, View, Text, StyleSheet,
   ScrollView,
@@ -13,7 +13,6 @@ import {
 import * as ExpoLocation from 'expo-location'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from "expo-router";
-import LoadingUI from "@/components/loading-ui";
 
 export default function NearbyReports() {
   const [loading, setLoading] = useState(true);
@@ -165,11 +164,10 @@ export default function NearbyReports() {
 
   if (loading) {
     return (
-      // <View style={styles.centerContainer}>
-      //   <ActivityIndicator size="large" color="#12ee25" />
-      //   <Text style={styles.loadingText}>Loading</Text>
-      // </View>
-      <LoadingUI />
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#12ee25" />
+        <Text style={styles.loadingText}>Loading</Text>
+      </View>
     );
   }
 
