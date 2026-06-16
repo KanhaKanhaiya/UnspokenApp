@@ -30,6 +30,14 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
+      - name: Create Google Services JSON
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          cat << 'EOF' > google-services.json
+          $GOOGLE_SERVICES_JSON
+          EOF
+          
       - name: Generate Native Android Directories
         env:
           EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
