@@ -3,11 +3,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { Alert, Platform, StyleSheet, useWindowDimensions, View, TouchableOpacity, ScrollView, Text, TextInput, ActivityIndicator, Image, Button } from 'react-native';
 // import { Platform } from 'react-native';
 import * as ExpoLocation from 'expo-location'
-import firestore from '@react-native-firebase/firestore';
 import { supabase } from '../../supabaseConfig';
 import { router } from 'expo-router';
-import { model } from '../../firebaseConfig';
-import { Schema } from 'firebase/ai';
+import { getAiModel } from '../../firebaseConfig';
 
 let MapView = null
 if (Platform.OS !== 'web') {
@@ -116,60 +114,100 @@ export default function Report() {
 
   const [aiDiagnosis, setAIDiagnosis] = useState(null);
 
-  async function fileToGenerativePart(file) {
-  const base64EncodedDataPromise = new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result.split(',')[1]);
-    reader.readAsDataURL(file);
-  });
-  return {
-    inlineData: { data: await base64EncodedDataPromise, mimeType: file.type },
-  };
-}
+  async function blobToGenerativePart(blob) {
+    const base64EncodedDataPromise = new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const raw = typeof reader.result === 'string' ? reader.result : '';
+        const base64 = raw.includes(',') ? raw.split(',')[1] : '';
+        resolve(base64);
+      };
+      reader.onerror = () => reject(new Error('Unable to read image for AI analysis.'));
+      reader.readAsDataURL(blob);
+    });
 
-  const handleSendAlert = () => {
+    return {
+      inlineData: {
+        data: await base64EncodedDataPromise,
+        mimeType: blob.type || 'image/jpeg'
+      },
+    };
+  }
+
+  const handleSendAlert = async () => {
     setIsAnalysing(true);
     setAIDiagnosis(null);
 
     const pointLocation = `POINT(${location.longitude} ${location.latitude})`
 
-    const { data: reportData, error: dbError } = supabase.from('animal_reports').insert([
-      {
-        symptoms: symptoms,
-        type: animalType,
-        location: pointLocation,
-        image: ""
+    try {
+      const { data: insertedReports, error: insertError } = await supabase.from('animal_reports').insert([
+        {
+          symptoms: symptoms,
+          type: animalType,
+          location: pointLocation,
+          image: ""
+        }
+      ]).select();
+
+      if (insertError) throw insertError;
+
+      const createdReport = insertedReports?.[0];
+      if (!createdReport) throw new Error('Report creation did not return a row.');
+
+      const response = await fetch(imageUri);
+      const imageBlob = await response.blob();
+
+      const { data: uploadData, error: uploadError } = await supabase.storage.from('unspokenStorage').upload(
+        `animalImages/${createdReport.id}`,
+        imageBlob,
+        {
+          contentType: 'image/jpeg'
+        }
+      );
+
+      if (uploadError) throw uploadError;
+
+      const publicUrl = supabase.storage.from('unspokenStorage').getPublicUrl(uploadData.path).data.publicUrl;
+      const { error: updateError } = await supabase
+        .from('animal_reports')
+        .update({ image: publicUrl })
+        .eq('id', createdReport.id);
+
+      if (updateError) throw updateError;
+
+      try {
+        const model = await getAiModel();
+        const imagePart = await blobToGenerativePart(imageBlob);
+        const geminiResponse = await model.generateContent([
+          'Imagine that you are an excellent vet. DO NOT STATE that You are an AI. State steps to cure it with suspected illness/injury etc.',
+          imagePart
+        ]);
+
+        const rawAIResponse = geminiResponse?.response?.text?.() ?? '';
+        const parsed = JSON.parse(rawAIResponse);
+        const diagnosis = parsed?.characters?.[0] ?? null;
+
+        if (diagnosis) {
+          setAIDiagnosis({
+            ...diagnosis,
+            confidence: typeof diagnosis.confidence === 'number'
+              ? Math.round(diagnosis.confidence * 100)
+              : diagnosis.confidence,
+          });
+        } else {
+          Alert.alert('AI analysis unavailable', 'Report sent, but AI did not return a diagnosis.');
+        }
+      } catch (aiError) {
+        console.error('AI analysis failed:', aiError);
+        Alert.alert('AI analysis unavailable', 'Report sent successfully, but AI analysis failed.');
       }
-    ])
-      .select()
-      .then((data) => {
-        fetch(imageUri).then((response) => {
-          response.blob().then((imageBlob) => {
-            supabase.storage.from('unspokenStorage').upload(`animalImages/${data.data[0].id}`, imageBlob, {
-              contentType: 'image/jpeg'
-              //TODO(Secuity risk.)
-            }).then(async (data2) => {
-              await supabase.from('animal_reports').update({ image: supabase.storage.from('unspokenStorage').getPublicUrl(data2.data.path).data.publicUrl }).eq('id', data.data[0].id)
-              //TODO(Fix this long route to add image url.)
-
-              const imagePart = await fileToGenerativePart(new File([imageBlob], "animalImage.jpg", { type: imageBlob.type }))
-
-              const geminiResponse = await model.generateContent(["Imagine that you are an excellent vet. DO NOT STATE that You are an AI. State steps to cure it with suspected illness/injury etc.", imagePart])
-              //TODO(Add error handling if response is not evaluated.)
-              //TODO(Security risk. Move Gemini API Implementation to backend.)
-              //setTimeout(() => {
-                console.log(JSON.parse(geminiResponse.response.text())["characters"][0])
-                setAIDiagnosis(JSON.parse(geminiResponse.response.text())["characters"][0]);
-                setAIDiagnosis({ ...aiDiagnosis, confidence: aiDiagnosis.confidence*100 })
-                setIsAnalysing(false);
-              //}, 1000);
-            })
-          })
-        })
-
-        console.log(data)
-
-      })
+    } catch (error) {
+      console.error('Failed to send report:', error);
+      Alert.alert('Unable to send alert', 'Please try again.');
+    } finally {
+      setIsAnalysing(false);
+    }
 
   };
 

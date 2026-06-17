@@ -2,13 +2,11 @@ import { initializeApp } from 'firebase/app';
 import {
   initializeAuth,
   getReactNativePersistence,
-  browserLocalPersistence,
   getAuth
 } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { getDatabase } from 'firebase/database';
-import { getAI, getGenerativeModel, GoogleAIBackend, Schema } from "firebase/ai";
 import { installAbortSignalPolyfill } from 'abort-signal-polyfill';
 
 const firebaseConfig = {
@@ -37,26 +35,40 @@ if (Platform.OS === 'web') {
 
 const database = getDatabase(app);
 
-const ai = getAI(app, { backend: new GoogleAIBackend() });
+let modelPromise = null;
 
-      const jsonSchema = Schema.object({
- properties: {
-    characters: Schema.array({
-      items: Schema.object({
-        properties: {
-          condition: Schema.string(),
-          confidence: Schema.number(),
-          advice: Schema.string(),
-          ngoAlertStatus: Schema.string(),
+export async function getAiModel() {
+  if (!modelPromise) {
+    const { getAI, getGenerativeModel, GoogleAIBackend, Schema } = await import('firebase/ai');
+
+    const ai = getAI(app, { backend: new GoogleAIBackend() });
+    const jsonSchema = Schema.object({
+      properties: {
+        characters: Schema.array({
+          items: Schema.object({
+            properties: {
+              condition: Schema.string(),
+              confidence: Schema.number(),
+              advice: Schema.string(),
+              ngoAlertStatus: Schema.string(),
+            },
+          }),
+        }),
+      },
+    });
+
+    modelPromise = Promise.resolve(
+      getGenerativeModel(ai, {
+        model: 'gemini-2.5-flash-lite',
+        generationConfig: {
+          responseMimeType: 'application/json',
+          responseSchema: jsonSchema,
         },
-      }),
-    }),
+      })
+    );
   }
-});
 
-const model = getGenerativeModel(ai, { model: "gemini-3.1-flash-lite", generationConfig: {
-    responseMimeType: "application/json",
-    responseSchema: jsonSchema
-  }, });
+  return modelPromise;
+}
 
-export { auth, database, model };
+export { auth, database };
