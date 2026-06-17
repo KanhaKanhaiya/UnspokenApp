@@ -8,7 +8,8 @@ import {
   Platform,
   ActivityIndicator,
   useWindowDimensions,
-  Button
+  Button,
+  Alert
 } from "react-native";
 import * as ExpoLocation from 'expo-location'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -40,24 +41,24 @@ export default function NearbyReports() {
         let currentLoc = await ExpoLocation.getCurrentPositionAsync({});
         setLocation({ ...location, longitude: currentLoc.coords.longitude, latitude: currentLoc.coords.latitude })
         try {
-          //const { data: reportsData, error: reportsError } = await 
-          supabase.rpc('get_reports_nearby', {
+          const { data: rpcData, error: rpcError } = await supabase.rpc('get_reports_nearby', {
             user_lng: currentLoc.coords.longitude,
             user_lat: currentLoc.coords.latitude,
             radius_meters: 5000
-          }).then((data) => {
-            console.log(data)
-            setReports(data.data)
-            setLoading(false)
-          })
+          });
 
-          if (reportsError) {
+          if (rpcError) {
+            console.warn('Error fetching nearby reports:', rpcError);
+            setLoading(false);
             return;
-            // TODO(Add error handling)
           }
 
-          console.log(reportsData)
-        } catch (error) { }
+          setReports(rpcData ?? []);
+          setLoading(false);
+        } catch (error) {
+          console.error('Unexpected error fetching nearby reports:', error);
+          setLoading(false);
+        }
 
       } catch (error) {
         if (Platform.OS === 'web')
