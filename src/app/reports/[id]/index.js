@@ -16,13 +16,10 @@ import { ref, query, orderByChild, limitToLast, onValue } from 'firebase/databas
 import { router, useLocalSearchParams } from 'expo-router';
 import { supabase } from '../../../../supabaseConfig';
 
-let MapView = null;
-let Marker = null;
+let WebView = null;
 if (Platform.OS !== 'web') {
     try {
-        const Maps = require('react-native-maps');
-        MapView = Maps.default;
-        Marker = Maps.Marker;
+        WebView = require('react-native-webview').WebView;
     } catch (e) {
         //TODO(Show error.)
     }
@@ -148,23 +145,19 @@ export default function RescueDetails() {
 
                     <View style={styles.mapCard}>
                         <View style={styles.mapFrame}>
-                            {Platform.OS === 'web' || !MapView ? (
+                            {Platform.OS === 'web' ? (
                                 React.createElement('iframe', { srcDoc: generateWebMapHtml(), style: { width: '100%', height: '100%', border: 'none' } })
+                            ) : WebView ? (
+                                <WebView
+                                    source={{ html: generateWebMapHtml() }}
+                                    originWhitelist={['*']}
+                                    javaScriptEnabled
+                                    domStorageEnabled
+                                />
                             ) : (
-                                <MapView
-                                    style={{ width: '100%', height: '100%' }}
-                                    scrollEnabled={true} pitchEnabled={true} zoomEnabled={true}
-                                    initialRegion={{ latitude: reportData.latitude, longitude: reportData.longitude, latitudeDelta: 0.015, longitudeDelta: 0.015 }}
-                                >
-                                    <Marker coordinate={{ latitude: reportData.latitude, longitude: reportData.longitude }}>
-                                        <View style={styles.nativePin} />
-                                    </Marker>
-                                    {location && (
-                                        <Marker coordinate={location} zIndex={999}>
-                                            <View style={styles.userDotPulseContainer}><View style={styles.userPulseRing} /><View style={styles.userCoreBlueDot} /></View>
-                                        </Marker>
-                                    )}
-                                </MapView>
+                                <View style={styles.webMapUI}>
+                                    <Text style={styles.webMapText}>Map unavailable</Text>
+                                </View>
                             )}
                         </View>
                         <View style={styles.mapFooter}>
@@ -230,10 +223,8 @@ const styles = StyleSheet.create({
     cardTitle: { fontSize: 14, fontWeight: '700', color: '#111827', marginLeft: 6 },
     mapCard: { borderRadius: 12, overflow: 'hidden', marginBottom: 16, borderWidth: 1, borderColor: '#E5E7EB' },
     mapFrame: { height: 160, width: '100%', backgroundColor: '#E5E7EB' },
-    nativePin: { width: 20, height: 20, borderRadius: 10, backgroundColor: '#EF4444', borderWidth: 3, borderColor: '#FFFFFF', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3 },
-    userDotPulseContainer: { alignItems: 'center', justifyContent: 'center' },
-    userCoreBlueDot: { width: 14, height: 14, borderRadius: 7, backgroundColor: '#3B82F6', borderWidth: 2, borderColor: '#FFFFFF' },
-    userPulseRing: { position: 'absolute', width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(59, 130, 246, 0.24)' },
+    webMapUI: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EFF6FF' },
+    webMapText: { fontSize: 13, color: '#1E40AF', fontWeight: '700' },
     mapFooter: { flexDirection: 'row', justifyContent: 'space-between', padding: 10, backgroundColor: '#F9FAFB' },
     mapFooterText: { fontSize: 11, color: '#6B7280', fontWeight: '500' },
     aiTextBold: { fontSize: 13, fontWeight: '700', color: '#1F2937' },
