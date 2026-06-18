@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { Alert, Platform, StyleSheet, useWindowDimensions, View, TouchableOpacity, ScrollView, Text, TextInput, ActivityIndicator, Image, Button } from 'react-native';
 // import { Platform } from 'react-native';
@@ -7,9 +7,9 @@ import { supabase } from '../../supabaseConfig';
 import { router } from 'expo-router';
 import { getAiModel } from '../../firebaseConfig';
 
-let MapView = null
+let WebView = null
 if (Platform.OS !== 'web') {
-  MapView = require('react-native-maps').default
+  WebView = require('react-native-webview').WebView
 }
 
 export default function Report() {
@@ -109,6 +109,42 @@ export default function Report() {
   };
 
   const checkValidity = imageUri && location.latitude && location.longitude
+
+  const generateMapHtml = () => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+      <style>
+        html, body, #map { height: 100%; width: 100%; padding: 0; margin: 0; }
+        .user-dot {
+          background-color: #3B82F6; width: 14px; height: 14px;
+          border-radius: 50%; border: 2px solid white;
+          box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+        }
+      </style>
+    </head>
+    <body>
+      <div id="map"></div>
+      <script>
+        const hasLocation = ${Boolean(location.latitude && location.longitude)};
+        const lat = ${location.latitude || 20.5937};
+        const lng = ${location.longitude || 78.9629};
+        const map = L.map('map', { zoomControl: true }).setView([lat, lng], hasLocation ? 15 : 4);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap'
+        }).addTo(map);
+        if (hasLocation) {
+          const userIcon = L.divIcon({ className: 'user-dot', iconSize: [14, 14], iconAnchor: [7, 7] });
+          L.marker([lat, lng], { icon: userIcon }).addTo(map);
+        }
+      </script>
+    </body>
+    </html>
+  `;
 
   const [isAnalyzing, setIsAnalysing] = useState(false)
 
@@ -304,14 +340,24 @@ export default function Report() {
           />
 
           <View style={styles.mapFrame}>
-            {Platform.OS === 'web' || !MapView ? (
-              // TODO(Implement Map on Web using Open Street Maps API)
+            {Platform.OS === 'web' ? (
+              React.createElement('iframe', {
+                srcDoc: generateMapHtml(),
+                style: { width: '100%', height: '100%', border: 'none' },
+                title: 'Rescue Location'
+              })
+            ) : WebView ? (
+              <WebView
+                source={{ html: generateMapHtml() }}
+                originWhitelist={['*']}
+                javaScriptEnabled
+                domStorageEnabled
+              />
+            ) : (
               <View style={styles.webMapUI}>
                 <Text style={styles.webMapText}>Location</Text>
-                <Text style={styles.webMapCoords}>{location.latitude.toFixed(4)}° N, {location.longitude.toFixed(4)}° E</Text>
+                <Text style={styles.webMapCoords}>{location.latitude.toFixed(4)} N, {location.longitude.toFixed(4)} E</Text>
               </View>
-            ) : (
-              <MapView style={styles.nativeMap} region={location} showsUserLocation={true} />
             )}
           </View>
         </View>

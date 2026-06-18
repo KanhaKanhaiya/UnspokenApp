@@ -12,9 +12,14 @@ import {
   Alert
 } from "react-native";
 import * as ExpoLocation from 'expo-location'
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from "expo-router";
 import LoadingUI from "@/components/loading-ui";
+
+let WebView = null;
+if (Platform.OS !== 'web') {
+  WebView = require('react-native-webview').WebView;
+}
 
 export default function NearbyReports() {
   const [loading, setLoading] = useState(true);
@@ -75,18 +80,6 @@ export default function NearbyReports() {
 
   const [selectedRescueID, setSelectedRescueID] = useState(null);
 
-  let MapView = null;
-  let Marker = null;
-  if (Platform.OS !== 'web') {
-    try {
-      const Maps = require('react-native-maps');
-      MapView = Maps.default;
-      Marker = Maps.Marker;
-    } catch (e) {
-      //  TODO(Show Error)
-    }
-  }
-
   const generateWebMapHtml = () => {
     return `
       <!DOCTYPE html>
@@ -135,7 +128,9 @@ export default function NearbyReports() {
 
             const marker = L.marker([r.latitude, r.longitude], { icon }).addTo(map);
             marker.on('click', () => {
-              window.parent.postMessage(JSON.stringify({ type: 'PIN_CLICK', id: r.id }), '*');
+              const message = JSON.stringify({ type: 'PIN_CLICK', id: r.id });
+              if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(message);
+              window.parent.postMessage(message, '*');
             });
           });
         </script>
@@ -189,27 +184,26 @@ export default function NearbyReports() {
                 style: { width: '100%', height: '100%', border: 'none' },
                 title: "Nearby Rescues"
               })
+            ) : WebView ? (
+              <WebView
+                source={{ html: generateWebMapHtml() }}
+                originWhitelist={['*']}
+                javaScriptEnabled
+                domStorageEnabled
+                onMessage={(event) => {
+                  try {
+                    const data = JSON.parse(event.nativeEvent.data);
+                    if (data.type === 'PIN_CLICK') {
+                      setSelectedRescueID(data.id);
+                    }
+                  } catch (e) {
+                  }
+                }}
+              />
             ) : (
-              <MapView style={styles.nativeMapStyle} initialRegion={location}>
-                <Marker coordinate={{ latitude: location.latitude, longitude: location.longitude }} zIndex={999}>
-                  <View style={styles.userDotPulseContainer}>
-                    <View style={styles.userPulseRing} />
-                    <View style={styles.userCoreBlueDot} />
-                  </View>
-                </Marker>
-
-                {reports.map((report) => (
-                  <Marker
-                    key={report.id}
-                    coordinate={{ latitude: report.latitude, longitude: report.longitude }}
-                    onPress={() => setSelectedRescueID(report.id)}
-                  >
-                    <View style={[styles.customNativePin, report.status === 'Critical' && styles.criticalPinBg]}>
-                      <MaterialCommunityIcons name="alert-circle" size={16} color="#FFF" />
-                    </View>
-                  </Marker>
-                ))}
-              </MapView>
+              <View style={styles.webMapUI}>
+                <Text style={styles.webMapText}>Map unavailable</Text>
+              </View>
             )}
 
             {selectedRescueID && (
@@ -305,7 +299,8 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 5,
   },
-  nativeMapStyle: { width: '100%', height: '100%' },
+  webMapUI: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EFF6FF' },
+  webMapText: { fontSize: 13, color: '#1E40AF', fontWeight: '700' },
 
   clearFilterFloatingBtn: {
     position: 'absolute', bottom: 12, right: 12, backgroundColor: '#FFFFFF',
@@ -314,12 +309,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15, shadowRadius: 4, elevation: 4, zIndex: 10
   },
   clearFilterText: { marginLeft: 6, fontSize: 13, fontWeight: '700', color: '#1F2937' },
-
-  customNativePin: { backgroundColor: '#F59E0B', padding: 6, borderRadius: 20, borderWidth: 2, borderColor: '#FFFFFF' },
-  criticalPinBg: { backgroundColor: '#EF4444' },
-  userDotPulseContainer: { alignItems: 'center', justifyContent: 'center' },
-  userCoreBlueDot: { width: 14, height: 14, borderRadius: 7, backgroundColor: '#3B82F6', borderWidth: 2, borderColor: '#FFFFFF' },
-  userPulseRing: { position: 'absolute', width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(59, 130, 246, 0.24)' },
 
   feedHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingHorizontal: 4 },
   feedTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },
