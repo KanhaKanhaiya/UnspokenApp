@@ -1,7 +1,17 @@
-name: Android Build
+name: Android EAS Build
 
 on:
   workflow_dispatch:
+    inputs:
+      profile:
+        description: EAS build profile
+        required: false
+        default: preview
+        type: choice
+        options:
+          - development
+          - preview
+          - production
 
 jobs:
   build:
@@ -14,21 +24,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-size: '24'
           node-version: '24'
           cache: 'npm'
 
-      - name: Setup Java JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
       - name: Create Google Services JSON
         env:
@@ -36,10 +36,10 @@ jobs:
         run: |
           echo "$GOOGLE_SERVICES_JSON" > google-services.json
 
-      - name: Setup Gradle & Cache
-        uses: gradle/actions/setup-gradle@v3
-          
-      - name: Generate Native Android Directories
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Build Android with EAS
         env:
           EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
           EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN }}
@@ -51,16 +51,7 @@ jobs:
           EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: ${{ secrets.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID }}
           EXPO_PUBLIC_SUPABASE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
-        run: npx expo prebuild --platform android
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_LOCAL_BUILD_ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
+        run: eas build --platform android --profile ${{ github.event.inputs.profile }} --non-interactive
 
-      - name: Compile APK
-        run: |
-          cd android
-          ./gradlew assembleDebug -PreactNativeArchitectures=arm64-v8a
-
-      - name: Upload Compiled APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release
-          path: android/app/build/outputs/apk/release/app-release.apk
-          
