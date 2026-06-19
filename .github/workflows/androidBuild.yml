@@ -2,6 +2,15 @@ name: Android Build
 
 on:
   workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Select Build Type'
+        required: true
+        type: choice
+        default: 'Debug'
+        options:
+          - 'Debug'
+          - 'Release'
 
 jobs:
   build:
@@ -56,11 +65,18 @@ jobs:
       - name: Compile APK
         run: |
           cd android
-          ./gradlew assembleDebug -PreactNativeArchitectures=arm64-v8a
+          ./gradlew assemble${{ github.event.inputs.build_type }} -PreactNativeArchitectures=arm64-v8a
+
+      - name: Encrypt artifact file
+        env:
+          PASSPHRASE: ${{ secrets.ARTIFACT_PASSPHRASE }}
+        run: |
+          cd android/app/build/outputs/apk/debug/
+          gpg --batch --yes --symmetric --cipher-algo AES256 --passphrase "$PASSPHRASE" app-debug.apk
 
       - name: Upload Compiled APK Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: app-release
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: app
+          path: app*.apk.gpg
           
