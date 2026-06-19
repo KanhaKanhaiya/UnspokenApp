@@ -8,18 +8,12 @@ import {
   Platform,
   ActivityIndicator,
   useWindowDimensions,
-  Button,
-  Alert
+  Button
 } from "react-native";
 import * as ExpoLocation from 'expo-location'
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from "expo-router";
 import LoadingUI from "@/components/loading-ui";
-
-let WebView = null;
-if (Platform.OS !== 'web') {
-  WebView = require('react-native-webview').WebView;
-}
 
 export default function NearbyReports() {
   const [loading, setLoading] = useState(true);
@@ -46,24 +40,24 @@ export default function NearbyReports() {
         let currentLoc = await ExpoLocation.getCurrentPositionAsync({});
         setLocation({ ...location, longitude: currentLoc.coords.longitude, latitude: currentLoc.coords.latitude })
         try {
-          const { data: rpcData, error: rpcError } = await supabase.rpc('get_reports_nearby', {
+          //const { data: reportsData, error: reportsError } = await 
+          supabase.rpc('get_reports_nearby', {
             user_lng: currentLoc.coords.longitude,
             user_lat: currentLoc.coords.latitude,
             radius_meters: 5000
-          });
+          }).then((data) => {
+            console.log(data)
+            setReports(data.data)
+            setLoading(false)
+          })
 
-          if (rpcError) {
-            console.warn('Error fetching nearby reports:', rpcError);
-            setLoading(false);
+          if (reportsError) {
             return;
+            // TODO(Add error handling)
           }
 
-          setReports(rpcData ?? []);
-          setLoading(false);
-        } catch (error) {
-          console.error('Unexpected error fetching nearby reports:', error);
-          setLoading(false);
-        }
+          console.log(reportsData)
+        } catch (error) { }
 
       } catch (error) {
         if (Platform.OS === 'web')
@@ -79,6 +73,18 @@ export default function NearbyReports() {
   const isLarge = width > 768;
 
   const [selectedRescueID, setSelectedRescueID] = useState(null);
+
+  let MapView = null;
+  let Marker = null;
+  if (Platform.OS !== 'web') {
+    try {
+      const Maps = require('react-native-maps');
+      MapView = Maps.default;
+      Marker = Maps.Marker;
+    } catch (e) {
+      //  TODO(Show Error)
+    }
+  }
 
   const generateWebMapHtml = () => {
     return `
@@ -128,7 +134,7 @@ export default function NearbyReports() {
 
             const marker = L.marker([r.latitude, r.longitude], { icon }).addTo(map);
             marker.on('click', () => {
-              const message = JSON.stringify({ type: 'PIN_CLICK', id: r.id });
+                            const message = JSON.stringify({ type: 'PIN_CLICK', id: r.id });
               if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(message);
               window.parent.postMessage(message, '*');
             });
@@ -184,7 +190,7 @@ export default function NearbyReports() {
                 style: { width: '100%', height: '100%', border: 'none' },
                 title: "Nearby Rescues"
               })
-            ) : WebView ? (
+             ) : WebView ? (
               <WebView
                 source={{ html: generateWebMapHtml() }}
                 originWhitelist={['*']}

@@ -44,12 +44,6 @@ module.exports = {
     },
     ios: {
       bundleIdentifier: "app.web.unspokenapp"
-    },
-    extra: {
-      router: {},
-      eas: {
-        projectId: "5d0fd898-f9f7-4cd3-96ec-75c8cd26e334"
-      }
     }
   }
 };

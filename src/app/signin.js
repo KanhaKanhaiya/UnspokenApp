@@ -30,7 +30,7 @@ export default function SignIn() {
           <Text style={styles.title}>Welcome To Unspoken</Text>
           <Text style={styles.subtitle}>{user.displayName}</Text>
           <Text style={styles.subtitle}>{user.email}</Text>
-          <Button onPress={() => router.navigate('/')} title="Report" />
+          <Button onPress={() => router.navigate('/report')} title="Report" />
           <TouchableOpacity style={styles.logoutButton} onPress={logout}>
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
