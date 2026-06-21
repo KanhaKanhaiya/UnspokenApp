@@ -15,7 +15,15 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from "expo-router";
 import LoadingUI from "@/components/loading-ui";
 
+let WebView = null
+if (Platform.OS !== 'web') {
+  WebView = require('react-native-webview').WebView
+}
+
 export default function NearbyReports() {
+
+
+
   const [loading, setLoading] = useState(true);
   const [reports, setReports] = useState([])
 
@@ -48,7 +56,10 @@ export default function NearbyReports() {
           }).then((data) => {
             console.log(data)
             setReports(data.data)
-            setLoading(false)
+            setTimeout(() => {
+
+              setLoading(false)
+            }, 5000)
           })
 
           if (reportsError) {
@@ -190,7 +201,7 @@ export default function NearbyReports() {
                 style: { width: '100%', height: '100%', border: 'none' },
                 title: "Nearby Rescues"
               })
-             ) : WebView ? (
+            ) : WebView ? (
               <WebView
                 source={{ html: generateWebMapHtml() }}
                 originWhitelist={['*']}
@@ -284,7 +295,7 @@ const styles = StyleSheet.create({
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F9FAFB' },
   loadingText: { marginTop: 12, fontSize: 14, color: '#4B5563', fontWeight: '600' },
 
-  scrollContainer: { alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16 },
+  scrollContainer: { alignItems: 'center', paddingVertical: 46, paddingHorizontal: 16 },
   contentLimiter: { width: '100%' },
 
   pageHeader: { marginBottom: 16, paddingHorizontal: 4 },

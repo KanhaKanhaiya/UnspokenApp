@@ -8,11 +8,16 @@ import {
     signOut
 } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
+import { getAuth } from '@react-native-firebase/auth';
 
-let GoogleSignIn = null;
+let GoogleOneTapSignIn = null;
+let isNoSavedCredentialFoundResponse = null;
+let isSuccessResponse = null;
 if (Platform.OS !== 'web') {
-    GoogleSignIn = require('@react-native-google-signin/google-signin').GoogleSignIn;
-    GoogleSignIn.configure({
+    GoogleOneTapSignIn = require('react-native-nitro-google-signin').GoogleOneTapSignIn;
+    isNoSavedCredentialFoundResponse = require('react-native-nitro-google-signin').isNoSavedCredentialFoundResponse;
+    isSuccessResponse = require('react-native-nitro-google-signin').isSuccessResponse;
+    GoogleOneTapSignIn.configure({
         webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
     });
 }
@@ -37,12 +42,28 @@ export const useAuth = () => {
 
             // if (isExpoGo)
             //     return;
-            
 
-            await GoogleSignIn.hasPlayServices();
-            const userInfo = await GoogleSignIn.signIn();
-            const credential = GoogleAuthProvider.credential(userInfo.idToken);
-            return await signInWithCredential(auth, credential);
+
+            await GoogleOneTapSignIn.checkPlayServices()
+
+            let response = await GoogleOneTapSignIn.signIn();
+            if (isNoSavedCredentialFoundResponse(response)) {
+                response = await GoogleOneTapSignIn.createAccount();
+            }
+            if (isNoSavedCredentialFoundResponse(response)) {
+                response = await GoogleOneTapSignIn.presentExplicitSignIn();
+            }
+
+            if (!isSuccessResponse(response)) {
+                throw new Error('Google Sign-In was cancelled or failed');
+            }
+
+            const idToken = response.data?.idToken;
+            if (!idToken) {
+                throw new Error('No ID token found');
+            }
+            const googleCredential = GoogleAuthProvider.credential(idToken);
+            return signInWithCredential(getAuth(), googleCredential);
 
         } catch (error) {
             console.error("Error:", error);
@@ -51,8 +72,8 @@ export const useAuth = () => {
     };
 
     const logout = async () => {
-        if (Platform.OS !== 'web' && GoogleSignIn) {
-            await GoogleSignIn.signOut();
+        if (Platform.OS !== 'web') {
+            await GoogleOneTapSignIn.signOut()
         }
         return await signOut(auth);
     };

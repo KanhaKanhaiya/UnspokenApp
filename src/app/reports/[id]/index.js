@@ -131,7 +131,7 @@ export default function RescueDetails() {
         <View style={styles.screen}>
             <View style={styles.mainLayout}>
 
-                <View style={styles.headerBar}>
+                {/* <View style={styles.headerBar}>
                     <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                         <Ionicons name="arrow-back" size={20} color="#059669" />
                         <Text style={styles.backButtonText}>Back</Text>
@@ -139,7 +139,7 @@ export default function RescueDetails() {
                     <View style={styles.statusBadge}>
                         <View style={styles.statusDot} /><Text style={styles.statusText}>{reportData.status}</Text>
                     </View>
-                </View>
+                </View> */}
 
                 <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
@@ -210,7 +210,7 @@ export default function RescueDetails() {
 
 const styles = StyleSheet.create({
     screen: { flex: 1, backgroundColor: '#F9FAFB' },
-    mainLayout: { flex: 1, alignSelf: 'center', width: '100%', backgroundColor: '#FFFFFF', borderLeftWidth: 1, borderRightWidth: 1, borderColor: '#F3F4F6' },
+    mainLayout: { flex: 1, alignSelf: 'center', width: '100%', backgroundColor: '#FFFFFF', borderLeftWidth: 1, borderRightWidth: 1, borderColor: '#F3F4F6', paddingTop: 42 },
     headerBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
     backButton: { flexDirection: 'row', alignItems: 'center' },
     backButtonText: { color: '#059669', fontWeight: '600', fontSize: 14, marginLeft: 4 },

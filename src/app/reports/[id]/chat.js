@@ -168,12 +168,12 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#F3F4F6' },
   mainLayout: { flex: 1, alignSelf: 'center', width: '100%', backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.1, shadowRadius: 10 },
 
-  headerBar: { backgroundColor: '#0F766E', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: Platform.OS === 'ios' ? 50 : 16, paddingBottom: 16 },
+  headerBar: { backgroundColor: '#0F766E', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 42, paddingBottom: 16 },
   backButton: { marginRight: 16 },
   headerTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '700' },
   headerSubtitle: { color: '#CCFBF1', fontSize: 12, marginTop: 2 },
 
-  emptyChatContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 40, transform: [{ scaleY: -1 }] },
+  emptyChatContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 40 },
   emptyChatText: { color: '#9CA3AF', fontSize: 14, fontWeight: '600', marginTop: 12 },
 
   messageWrapper: { flexDirection: 'row', marginBottom: 16, maxWidth: '85%' },

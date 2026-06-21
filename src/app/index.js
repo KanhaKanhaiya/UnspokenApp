@@ -5,7 +5,10 @@ import { Alert, Platform, StyleSheet, useWindowDimensions, View, TouchableOpacit
 import * as ExpoLocation from 'expo-location'
 import { supabase } from '../../supabaseConfig';
 import { router } from 'expo-router';
-import { getAiModel } from '../../firebaseConfig';
+import { model } from '../../firebaseConfig';
+import { File } from 'expo-file-system'
+import { decode } from 'base64-arraybuffer'
+import { useAuth } from '@/hooks/useAuth';
 
 let WebView = null
 if (Platform.OS !== 'web') {
@@ -58,6 +61,13 @@ export default function Report() {
         { cancelable: true }
       )
   }
+
+  const { loginWithGoogle } = useAuth()
+  useEffect(() => {
+    loginWithGoogle().then((data) => {
+
+    })
+  }, [])
 
   const [isLocating, setIsLocating] = useState(false);
   const [address, setAddress] = useState('');
@@ -151,20 +161,20 @@ export default function Report() {
   const [aiDiagnosis, setAIDiagnosis] = useState(null);
 
   async function blobToGenerativePart(blob) {
-    const base64EncodedDataPromise = new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const raw = typeof reader.result === 'string' ? reader.result : '';
-        const base64 = raw.includes(',') ? raw.split(',')[1] : '';
-        resolve(base64);
-      };
-      reader.onerror = () => reject(new Error('Unable to read image for AI analysis.'));
-      reader.readAsDataURL(blob);
-    });
+    // const base64EncodedDataPromise = new Promise((resolve, reject) => {
+    //   const reader = new FileReader();
+    //   reader.onloadend = () => {
+    //     const raw = typeof reader.result === 'string' ? reader.result : '';
+    //     const base64 = raw.includes(',') ? raw.split(',')[1] : '';
+    //     resolve(base64);
+    //   };
+    //   reader.onerror = () => reject(new Error('Unable to read image for AI analysis.'));
+    //   reader.readAsDataURL(blob);
+    // });
 
     return {
       inlineData: {
-        data: await base64EncodedDataPromise,
+        data: blob,
         mimeType: blob.type || 'image/jpeg'
       },
     };
@@ -191,12 +201,13 @@ export default function Report() {
       const createdReport = insertedReports?.[0];
       if (!createdReport) throw new Error('Report creation did not return a row.');
 
-      const response = await fetch(imageUri);
-      const imageBlob = await response.blob();
+      const base64Image = await new File(imageUri).base64()
+      // const response = await fetch(imageUri);
+      // const imageBlob = await response.blob();
 
       const { data: uploadData, error: uploadError } = await supabase.storage.from('unspokenStorage').upload(
         `animalImages/${createdReport.id}`,
-        imageBlob,
+        decode(base64Image),
         {
           contentType: 'image/jpeg'
         }
@@ -213,10 +224,10 @@ export default function Report() {
       if (updateError) throw updateError;
 
       try {
-        const model = await getAiModel();
-        const imagePart = await blobToGenerativePart(imageBlob);
+        //const model = await getAiModel();
+        const imagePart = await blobToGenerativePart(base64Image);
         const geminiResponse = await model.generateContent([
-          'Imagine that you are an excellent vet. DO NOT STATE that You are an AI. State steps to cure it with suspected illness/injury etc.',
+          'Imagine that you are an excellent vet. DO NOT STATE that You are an AI. State steps for a volunteer to cure and/or provide first aid in simple language to it with suspected illness/injury etc.',
           imagePart
         ]);
 
@@ -431,7 +442,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     alignItems: 'center',
-    paddingVertical: 32,
+    paddingVertical: 42,
     paddingHorizontal: 16,
   },
   layout: {

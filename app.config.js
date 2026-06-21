@@ -36,7 +36,7 @@ module.exports = {
       ],
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
-      "@react-native-google-signin/google-signin"
+      "react-native-nitro-google-signin"
     ],
     experiments: {
       typedRoutes: true,
