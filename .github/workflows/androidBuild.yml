@@ -23,7 +23,6 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-size: '24'
           node-version: '24'
           cache: 'npm'
 
@@ -71,12 +70,13 @@ jobs:
         env:
           PASSPHRASE: ${{ secrets.ARTIFACT_PASSPHRASE }}
         run: |
-          cd android/app/build/outputs/apk/debug/
-          gpg --batch --yes --symmetric --cipher-algo AES256 --passphrase "$PASSPHRASE" app-debug.apk
+          cd android/app/build/outputs/apk/
+          gpg --batch --yes --symmetric --cipher-algo AES256 --passphrase "$PASSPHRASE" **/*.apk
 
       - name: Upload Compiled APK Artifact
         uses: actions/upload-artifact@v7
         with:
           name: app
-          path: app*.apk.gpg
+          path: |
+            **/*.apk.gpg
           
