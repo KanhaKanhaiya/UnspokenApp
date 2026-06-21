@@ -10,7 +10,7 @@
     "@react-native-firebase/auth": "^24.1.0",
     "@react-native-firebase/firestore": "^24.1.0",
     "@react-native-google-signin/google-signin": "^16.1.2",
-    "@supabase/supabase-js": "^2.107.0",
+    "@supabase/supabase-js": "^2.108.2",
     "abort-signal-polyfill": "^1.0.0",
     "base64-arraybuffer": "^1.0.2",
     "expo": "~56.0.9",
