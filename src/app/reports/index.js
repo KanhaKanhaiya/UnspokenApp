@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../../supabaseConfig";
 import {
-  FlatList, View, Text, StyleSheet,
+  View, Text, StyleSheet,
   ScrollView,
   TouchableOpacity,
   Image,
   Platform,
-  ActivityIndicator,
   useWindowDimensions,
   Button
 } from "react-native";

@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
-import { Alert, Platform, StyleSheet, useWindowDimensions, View, TouchableOpacity, ScrollView, Text, TextInput, ActivityIndicator, Image, Button } from 'react-native';
-// import { Platform } from 'react-native';
+import { Alert, Platform, StyleSheet, useWindowDimensions, View, TouchableOpacity, ScrollView, Text, TextInput, ActivityIndicator, Image } from 'react-native';
 import * as ExpoLocation from 'expo-location'
 import { supabase } from '../../supabaseConfig';
-import { router } from 'expo-router';
 import { model } from '../../firebaseConfig';
 import { File } from 'expo-file-system'
 import { decode } from 'base64-arraybuffer'
@@ -18,6 +16,7 @@ if (Platform.OS !== 'web') {
 export default function Report() {
   const { width } = useWindowDimensions();
   const [imageUri, setImageUri] = useState(null);
+
   const selectImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -29,7 +28,24 @@ export default function Report() {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
-      aspect: [4, 3],
+      quality: 1,
+    });
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+    }
+  };
+
+  const takeImage = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      Alert.alert('Permission required', 'Camera Permission not granted.');
+      //TODO(Make the alert better)
+      return;
+    }
+    let result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
       quality: 1,
     });
     if (!result.canceled) {
@@ -49,13 +65,13 @@ export default function Report() {
         "Choose one :",
         [
           {
-            text: "Take new photo", onPress: selectImage
+            text: "Cancel", style: "cancel"
           },
           {
             text: "Select Existing Image", onPress: selectImage
           },
           {
-            text: "Cancel", style: "cancel"
+            text: "Take new photo", onPress: takeImage
           }
         ],
         { cancelable: true }

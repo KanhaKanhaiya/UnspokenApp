@@ -5,8 +5,7 @@ import {
     View,
     ScrollView,
     TouchableOpacity,
-    Platform,
-    useWindowDimensions
+    Platform
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
