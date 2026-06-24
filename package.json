@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "dependencies": {
     "@expo/html-elements": "^0.10.1",
-    "@expo/ui": "~56.0.16",
+    "@expo/ui": "~56.0.18",
     "@expo/vector-icons": "^15.0.2",
     "@gluestack-ui/core": "^3.0.25",
     "@gluestack-ui/utils": "^3.0.21",
