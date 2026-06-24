@@ -1,11 +1,23 @@
-import { Stack } from "expo-router";
+import { Slot, Stack } from "expo-router";
+import '../../firebaseConfig'
 import 'react-native-url-polyfill/auto'
 import AppTabs from '../components/app-tabs'
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import '@/src/global.css';
+import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
+
 
 export default function RootLayout() {
   return <>
-  
-  <AppTabs />
+  {/* <SafeAreaView> */}
+  {/* <GluestackUIProvider> */}
+
+  <GluestackUIProvider>
+    <Slot />
+  </GluestackUIProvider>
+  {/* </GluestackUIProvider> */}
+  {/* </SafeAreaView> */}
   {/* <Stack screenOptions={
     {
       headerShown: false
