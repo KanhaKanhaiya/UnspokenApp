@@ -10,9 +10,9 @@ import {
   Button
 } from "react-native";
 import * as ExpoLocation from 'expo-location'
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from "expo-router";
-import LoadingUI from "@/components/loading-ui";
+import LoadingUI from "../../components/loading-ui";
 
 let WebView = null
 if (Platform.OS !== 'web') {
@@ -20,8 +20,6 @@ if (Platform.OS !== 'web') {
 }
 
 export default function NearbyReports() {
-
-
 
   const [loading, setLoading] = useState(true);
   const [reports, setReports] = useState([])
@@ -59,14 +57,13 @@ export default function NearbyReports() {
 
               setLoading(false)
             }, 5000)
+            //TODO(Remove deliberate delay)
           })
 
           if (reportsError) {
             return;
             // TODO(Add error handling)
           }
-
-          console.log(reportsData)
         } catch (error) { }
 
       } catch (error) {
@@ -83,18 +80,6 @@ export default function NearbyReports() {
   const isLarge = width > 768;
 
   const [selectedRescueID, setSelectedRescueID] = useState(null);
-
-  let MapView = null;
-  let Marker = null;
-  if (Platform.OS !== 'web') {
-    try {
-      const Maps = require('react-native-maps');
-      MapView = Maps.default;
-      Marker = Maps.Marker;
-    } catch (e) {
-      //  TODO(Show Error)
-    }
-  }
 
   const generateWebMapHtml = () => {
     return `
@@ -175,15 +160,7 @@ export default function NearbyReports() {
     ? reports.filter(r => r.id === selectedRescueID)
     : reports;
 
-  if (loading) {
-    return (
-      // <View style={styles.centerContainer}>
-      //   <ActivityIndicator size="large" color="#12ee25" />
-      //   <Text style={styles.loadingText}>Loading</Text>
-      // </View>
-      <LoadingUI />
-    );
-  }
+  if (loading) return <LoadingUI />
 
   return (
     <View style={styles.screen}>
@@ -243,9 +220,8 @@ export default function NearbyReports() {
           {displayedRescues.map((rescue) => (
             <TouchableOpacity
               key={rescue.id}
-              activeOpacity={0.9}
               style={[styles.rescueFeedCard, selectedRescueID === rescue.id && styles.highlightedCardBorder]}
-              onPress={() => setSelectedRescueID(rescue.id)}
+              onPress={() => router.navigate('/reports/' + rescue.id)}
             >
               <Image source={{ uri: rescue.image }} style={styles.rescueThumb} />
 
@@ -262,12 +238,12 @@ export default function NearbyReports() {
                 <Text style={styles.incidentHeadline} numberOfLines={1}>{rescue.title}</Text>
                 <Text style={styles.symptomSummaryText} numberOfLines={2}>{rescue.symptoms}</Text>
 
-                <View style={styles.locationFooterMeta}>
+                <View style={styles.locationFooterMeta} onP>
                   <Ionicons name="location-outline" size={14} color="#6B7280" />
                   <Text style={styles.distanceMetricText}>{rescue.distance} • </Text>
                   <Text style={styles.addressStringText} numberOfLines={1}>{rescue.address}</Text>
                 </View>
-                <Button title="See details." onPress={() => router.navigate('/reports/' + rescue.id)} />
+                {/* <Button title="See details." onPress={() => router.navigate('/reports/' + rescue.id)} /> */}
               </View>
             </TouchableOpacity>
           ))}
