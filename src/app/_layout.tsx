@@ -4,7 +4,7 @@ import 'react-native-url-polyfill/auto'
 import AppTabs from '../components/app-tabs'
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import '@/src/global.css';
+import '@/global.css'
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 
 

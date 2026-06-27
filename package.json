@@ -3,12 +3,13 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
-    "@expo/html-elements": "^0.10.1",
+    "@expo/html-elements": "^0.12.5",
     "@expo/ui": "~56.0.18",
     "@expo/vector-icons": "^15.0.2",
-    "@gluestack-ui/core": "^3.0.25",
-    "@gluestack-ui/utils": "^3.0.21",
+    "@gluestack-ui/core": "^5.0.15",
+    "@gluestack-ui/utils": "^5.0.6",
     "@legendapp/motion": "^2.5.3",
+    "@react-aria/visually-hidden": "^3.9.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-firebase/app": "^24.1.1",
     "@react-native-firebase/auth": "^24.1.1",
@@ -37,18 +38,19 @@
     "expo-web-browser": "~56.0.5",
     "firebase": "^12.15.0",
     "lucide-react-native": "^0.510.0",
-    "nativewind": "^4.2.6",
+    "nativewind": "^5.0.0-preview.2",
     "react": "19.2.3",
     "react-aria": "^3.50.0",
     "react-dom": "19.2.3",
     "react-native": "0.85.3",
+    "react-native-css": "^3.0.7",
     "react-native-gesture-handler": "~2.31.1",
     "react-native-nitro-google-signin": "^0.7.0",
     "react-native-nitro-modules": "^0.35.9",
     "react-native-reanimated": "4.3.1",
-    "react-native-safe-area-context": "~5.7.0",
+    "react-native-safe-area-context": "^5.8.0",
     "react-native-screens": "4.25.2",
-    "react-native-svg": "15.15.4",
+    "react-native-svg": "^15.15.5",
     "react-native-url-polyfill": "^3.0.0",
     "react-native-web": "~0.21.0",
     "react-native-webview": "^13.16.1",
@@ -58,10 +60,12 @@
     "uuid": "^14.0.0"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.1",
     "@types/react": "~19.2.2",
     "babel-plugin-module-resolver": "^5.0.3",
+    "postcss": "^8.5.15",
     "prettier-plugin-tailwindcss": "^0.5.14",
-    "tailwindcss": "^3.4.19",
+    "tailwindcss": "^4.3.1",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -72,5 +76,11 @@
     "web": "expo start --web",
     "lint": "expo lint"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "lightningcss": "1.30.1"
+  },
+  "resolutions": {
+    "lightningcss": "1.30.1"
+  }
 }
