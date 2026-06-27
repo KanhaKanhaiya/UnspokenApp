@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import {
-    StyleSheet,
-    Text,
-    View,
-    ScrollView,
-    TouchableOpacity,
-    Platform
-} from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import React, { useEffect, useState } from 'react';
+import {
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native';
 
-import { auth, database } from '../../../../firebaseConfig';
-import { ref, query, orderByChild, limitToLast, onValue } from 'firebase/database';
 import { router, useLocalSearchParams } from 'expo-router';
-import { supabase } from '../../../../supabaseConfig';
+import { limitToLast, onValue, orderByChild, query, ref } from 'firebase/database';
+import { auth, database } from '../../../../../firebaseConfig';
+import { supabase } from '../../../../../supabaseConfig';
 
 let WebView = null;
 if (Platform.OS !== 'web') {

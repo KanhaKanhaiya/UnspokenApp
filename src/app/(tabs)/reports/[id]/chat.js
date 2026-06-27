@@ -1,22 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  FlatList,
-  TouchableOpacity,
-  TextInput,
-  Platform,
-  KeyboardAvoidingView,
-  ActivityIndicator,
-  useWindowDimensions
-} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    FlatList,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from 'react-native';
 
-import { auth, database } from '../../../../firebaseConfig';
-import { ref, push, query, orderByChild, limitToLast, onValue } from 'firebase/database';
-import { router } from 'expo-router';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import { limitToLast, onValue, orderByChild, push, query, ref } from 'firebase/database';
+import { auth, database } from '../../../../../firebaseConfig';
 
 export default function Chat() {
   const { id } = useLocalSearchParams();

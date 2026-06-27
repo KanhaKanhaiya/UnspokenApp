@@ -1,18 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { supabase } from "../../../supabaseConfig";
-import {
-  View, Text, StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  Platform,
-  useWindowDimensions,
-  Button
-} from "react-native";
-import * as ExpoLocation from 'expo-location'
 import { Ionicons } from '@expo/vector-icons';
+import * as ExpoLocation from 'expo-location';
 import { router } from "expo-router";
-import LoadingUI from "../../components/loading-ui";
+import React, { useEffect, useState } from "react";
+import {
+    Image,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    useWindowDimensions,
+    View
+} from "react-native";
+import { supabase } from "../../../../supabaseConfig";
+import LoadingUI from "../../../components/loading-ui";
 
 let WebView = null
 if (Platform.OS !== 'web') {
