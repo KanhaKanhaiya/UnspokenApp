@@ -23,12 +23,7 @@ export default function Navbar() {
             </Link>
             <Link href="/reports" asChild>
               <Pressable className="py-2">
-                <Text className="text-[15px] text-black font-medium">Nearby</Text>
-              </Pressable>
-            </Link>
-            <Link href="/landing" asChild>
-              <Pressable className="py-2">
-                <Text className="text-[15px] text-black font-medium">Landing Page</Text>
+                <Text className="text-[15px] text-black font-medium">Nearby Reports</Text>
               </Pressable>
             </Link>
           </View>

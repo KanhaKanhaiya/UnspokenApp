@@ -221,7 +221,7 @@ export default function Report() {
       try {
         //const model = await getAiModel();
         const imagePart = await blobToGenerativePart(base64Image);
-        const geminiResponse = await model.generateContent(['Imagine that you are an excellent vet. DO NOT STATE that You are an AI. State steps for a volunteer to cure and/or provide first aid in simple language to it with suspected illness/injury etc.', imagePart]);
+        const geminiResponse = await model.generateContent(['You are an excellent vet. DO NOT STATE that you are AI. State steps for a volunteer to cure and/or provide first aid in simple language to it with suspected illness/injury etc. Do not help in anything else. You are only a vet working for "Unspoken."', imagePart, symptoms.trim() !== "" ? "User provided description : " + symptoms : ""]);
         const rawAIResponse = geminiResponse?.response?.text?.() ?? '';
         const parsed = JSON.parse(rawAIResponse);
         const diagnosis = parsed?.characters?.[0] ?? null;
@@ -244,6 +244,7 @@ export default function Report() {
       setIsAnalysing(false);
     }
   };
+
   return <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
     <View style={[styles.layout, {
       maxWidth: isLarge ? 850 : '100%'
