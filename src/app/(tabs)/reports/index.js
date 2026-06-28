@@ -1,16 +1,19 @@
+import { Box } from '@/components/ui/box';
+import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
+import { Image } from '@/components/ui/image';
+import { Pressable } from '@/components/ui/pressable';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { Ionicons } from '@expo/vector-icons';
 import * as ExpoLocation from 'expo-location';
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    Image,
+    Alert,
     Platform,
     ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    useWindowDimensions,
-    View
+    useWindowDimensions
 } from "react-native";
 import { supabase } from "../../../../supabaseConfig";
 import LoadingUI from "../../../components/loading-ui";
@@ -20,10 +23,12 @@ if (Platform.OS !== 'web') {
   WebView = require('react-native-webview').WebView
 }
 
+let cachedReports = null
+
 export default function NearbyReports() {
 
   const [loading, setLoading] = useState(true);
-  const [reports, setReports] = useState([])
+  const [reports, setReports] = useState(cachedReports || [])
 
   const [location, setLocation] = useState({
     latitude: 0,
@@ -32,7 +37,6 @@ export default function NearbyReports() {
 
   useEffect(() => {
     (async () => {
-
 
       try {
         let { status } = await ExpoLocation.requestForegroundPermissionsAsync();
@@ -45,6 +49,10 @@ export default function NearbyReports() {
         }
         let currentLoc = await ExpoLocation.getCurrentPositionAsync({});
         setLocation({ ...location, longitude: currentLoc.coords.longitude, latitude: currentLoc.coords.latitude })
+
+        if (cachedReports !== null) {
+          setLoading(false)
+          return; }
         try {
           //const { data: reportsData, error: reportsError } = await 
           supabase.rpc('get_reports_nearby', {
@@ -55,7 +63,7 @@ export default function NearbyReports() {
             console.log(data)
             setReports(data.data)
             setTimeout(() => {
-
+cachedReports = data.data
               setLoading(false)
             }, 5000)
             //TODO(Remove deliberate delay)
@@ -96,13 +104,23 @@ export default function NearbyReports() {
           .custom-pin {
             display: flex; align-items: center; justify-content: center;
             border-radius: 50%; border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             color: white; font-weight: bold; font-family: sans-serif; font-size: 14px;
+            transition: transform 0.2s;
           }
+          .custom-pin:hover { transform: scale(1.1); }
           .user-dot {
             background-color: #3B82F6; width: 14px; height: 14px;
             border-radius: 50%; border: 2px solid white;
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+          }
+          @media (prefers-color-scheme: dark) {
+            .leaflet-layer,
+            .leaflet-control-zoom-in,
+            .leaflet-control-zoom-out,
+            .leaflet-control-attribution {
+              filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+            }
           }
         </style>
       </head>
@@ -164,14 +182,16 @@ export default function NearbyReports() {
   if (loading) return <LoadingUI />
 
   return (
-    <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        <View style={[styles.contentLimiter, { maxWidth: isLarge ? 850 : '100%' }]}>
-          <View style={styles.pageHeader}>
-            <Text style={styles.pageTitle}>Nearby Rescues</Text>
-            <Text style={styles.pageSubtitle}>Showing {reports.length} cases within 5 km</Text>
-          </View>
-          <View style={[styles.mapCardWrapper, { height: isLarge ? 320 : 220 }]}>
+    <Box className="flex-1 bg-background">
+      <ScrollView contentContainerStyle={{ alignItems: 'center', paddingVertical: 40, paddingHorizontal: 16 }} showsVerticalScrollIndicator={false}>
+        <Box className={`w-full ${isLarge ? 'max-w-[850px]' : ''}`}>
+          
+          <VStack className="mb-5 px-1">
+            <Heading className="text-3xl font-extrabold text-foreground tracking-tight">Nearby Rescues</Heading>
+            <Text className="text-sm text-muted-foreground mt-1.5 font-medium">Monitoring {reports.length} emergencies within 5km</Text>
+          </VStack>
+          
+          <Box className={`w-full bg-muted rounded-2xl overflow-hidden mb-6 border border-border ${isLarge ? 'h-[360px]' : 'h-[260px]'}`}>
             {Platform.OS === 'web' ? (
               React.createElement('iframe', {
                 srcDoc: generateWebMapHtml(),
@@ -195,60 +215,71 @@ export default function NearbyReports() {
                 }}
               />
             ) : (
-              <View style={styles.webMapUI}>
-                <Text style={styles.webMapText}>Map unavailable</Text>
-              </View>
+              <Box className="flex-1 items-center justify-center bg-muted">
+                <Text className="text-sm text-muted-foreground font-bold">Map unavailable</Text>
+              </Box>
             )}
+          </Box>
 
-            {selectedRescueID && (
-              <TouchableOpacity style={styles.clearFilterFloatingBtn} onPress={() => setSelectedRescueID(null)}>
-                <Ionicons name="eye-outline" size={14} color="#1F2937" />
-                <Text style={styles.clearFilterText}>Show All</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          <View style={styles.feedHeaderRow}>
-            <Text style={styles.feedTitle}>
-              {selectedRescueID ? 'Selected Case' : 'All Active Rescues'}
-            </Text>
-            <View style={styles.counterBadge}>
-              <View style={styles.pulsingDot} />
-              <Text style={styles.counterBadgeText}>{displayedRescues.length} Active</Text>
-            </View>
-          </View>
-
-          {displayedRescues.map((rescue) => (
-            <TouchableOpacity
-              key={rescue.id}
-              style={[styles.rescueFeedCard, selectedRescueID === rescue.id && styles.highlightedCardBorder]}
-              onPress={() => router.navigate('/reports/' + rescue.id)}
+          {selectedRescueID && (
+            <Pressable 
+              className="w-full bg-primary/10 dark:bg-primary/20 p-4 rounded-xl flex-row items-center justify-between mb-6 border border-primary/20 active:opacity-70" 
+              onPress={() => setSelectedRescueID(null)}
             >
-              <Image source={{ uri: rescue.image }} style={styles.rescueThumb} />
+              <HStack className="items-center">
+                <Ionicons name="pin" size={20} color="#10B981" />
+                <Text className="ml-2 font-bold text-primary text-sm">Showing Selected Pin</Text>
+              </HStack>
+              <HStack className="items-center">
+                <Text className="font-bold text-primary text-sm mr-1">Clear Filter</Text>
+                <Ionicons name="close-circle" size={20} color="#10B981" />
+              </HStack>
+            </Pressable>
+          )}
 
-              <View style={styles.cardDetailsBox}>
-                <View style={styles.badgeLine}>
-                  <View style={[styles.statusIndicatorTag, rescue.status === 'Critical' ? styles.tagRed : styles.tagAmber]}>
-                    <Text style={[styles.tagText, styles.textRed]}>
-                      {rescue.status}
-                    </Text>
-                  </View>
-                  <Text style={styles.timeLabelText}>{rescue.time}</Text>
-                </View>
+          <HStack className="justify-between items-center mb-5 px-1">
+            <Heading className="text-lg font-extrabold text-foreground">
+              {selectedRescueID ? 'Incident Details' : 'Active Rescues'}
+            </Heading>
+            <HStack className="items-center bg-card px-3 py-1.5 rounded-full border border-border shadow-sm">
+              <Box className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse" />
+              <Text className="text-xs font-bold text-foreground">{displayedRescues.length} Active</Text>
+            </HStack>
+          </HStack>
 
-                <Text style={styles.incidentHeadline} numberOfLines={1}>{rescue.title}</Text>
-                <Text style={styles.symptomSummaryText} numberOfLines={2}>{rescue.symptoms}</Text>
+          <VStack className="gap-4">
+            {displayedRescues.map((rescue) => (
+              <Pressable
+                key={rescue.id}
+                className={`bg-card rounded-2xl flex-row p-4 border shadow-sm active:opacity-70 transition-colors ${selectedRescueID === rescue.id ? 'border-primary bg-primary/5' : 'border-border'}`}
+                onPress={() => router.push('/reports/' + rescue.id)}
+              >
+                <Image source={{ uri: rescue.image }} className="w-24 h-24 rounded-xl bg-muted object-cover" alt={rescue.title || "Rescue image"} />
 
-                <View style={styles.locationFooterMeta} onP>
-                  <Ionicons name="location-outline" size={14} color="#6B7280" />
-                  <Text style={styles.distanceMetricText}>{rescue.distance} • </Text>
-                  <Text style={styles.addressStringText} numberOfLines={1}>{rescue.address}</Text>
-                </View>
-                {/* <Button title="See details." onPress={() => router.navigate('/reports/' + rescue.id)} /> */}
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
+                <VStack className="flex-1 pl-4 justify-between py-0.5">
+                  <HStack className="justify-between items-start">
+                    <Box className={`px-2.5 py-1 rounded-md ${rescue.status === 'Critical' ? 'bg-destructive/10 dark:bg-destructive/20' : 'bg-amber-500/10 dark:bg-amber-500/20'}`}>
+                      <Text className={`text-[10px] font-extrabold uppercase tracking-wider ${rescue.status === 'Critical' ? 'text-destructive' : 'text-amber-600 dark:text-amber-400'}`}>
+                        {rescue.status}
+                      </Text>
+                    </Box>
+                    <Text className="text-xs text-muted-foreground font-semibold">{rescue.time}</Text>
+                  </HStack>
+
+                  <Heading className="text-base font-bold text-foreground mt-1.5 line-clamp-1">{rescue.title}</Heading>
+                  <Text className="text-sm text-muted-foreground leading-tight mt-1 mb-2 line-clamp-2">{rescue.symptoms}</Text>
+
+                  <HStack className="items-center">
+                    <Ionicons name="location-outline" size={14} color="#9CA3AF" />
+                    <Text className="text-xs font-bold text-foreground ml-1">{rescue.distance} • </Text>
+                    <Text className="text-xs text-muted-foreground flex-1 line-clamp-1">{rescue.address}</Text>
+                  </HStack>
+                  {/* <Button title="See details." onPress={() => router.navigate('/reports/' + rescue.id)} /> */}
+                </VStack>
+              </Pressable>
+            ))}
+          </VStack>
+        </Box>
       </ScrollView>
 
       {/* <View style={{ flex: 1, padding: 20 }}>
@@ -262,67 +293,6 @@ export default function NearbyReports() {
                 )}
                 />
         </View> */}
-    </View>
+    </Box>
   )
 }
-
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F9FAFB' },
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F9FAFB' },
-  loadingText: { marginTop: 12, fontSize: 14, color: '#4B5563', fontWeight: '600' },
-
-  scrollContainer: { alignItems: 'center', paddingVertical: 46, paddingHorizontal: 16 },
-  contentLimiter: { width: '100%' },
-
-  pageHeader: { marginBottom: 16, paddingHorizontal: 4 },
-  pageTitle: { fontSize: 24, fontWeight: '800', color: '#111827' },
-  pageSubtitle: { fontSize: 14, color: '#6B7280', marginTop: 2 },
-
-  mapCardWrapper: {
-    width: '100%',
-    backgroundColor: '#E5E7EB',
-    borderRadius: 20,
-    overflow: 'hidden',
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  webMapUI: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EFF6FF' },
-  webMapText: { fontSize: 13, color: '#1E40AF', fontWeight: '700' },
-
-  clearFilterFloatingBtn: {
-    position: 'absolute', bottom: 12, right: 12, backgroundColor: '#FFFFFF',
-    flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 14,
-    borderRadius: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15, shadowRadius: 4, elevation: 4, zIndex: 10
-  },
-  clearFilterText: { marginLeft: 6, fontSize: 13, fontWeight: '700', color: '#1F2937' },
-
-  feedHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingHorizontal: 4 },
-  feedTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },
-  counterBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ECFDF5', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 },
-  pulsingDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981', marginRight: 6 },
-  counterBadgeText: { fontSize: 12, fontWeight: '700', color: '#065F46' },
-
-  rescueFeedCard: { backgroundColor: '#FFFFFF', borderRadius: 16, flexDirection: 'row', padding: 12, marginBottom: 14, borderWidth: 1, borderColor: '#F3F4F6', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 2 },
-  highlightedCardBorder: { borderColor: '#818CF8', backgroundColor: '#FAFAFF', borderWidth: 1.5 },
-  rescueThumb: { width: 85, height: 85, borderRadius: 12, backgroundColor: '#E5E7EB' },
-  cardDetailsBox: { flex: 1, paddingLeft: 14, justifyContent: 'space-between' },
-  badgeLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  statusIndicatorTag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  tagRed: { backgroundColor: '#FEE2E2' },
-  tagText: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
-  textRed: { color: '#991B1B' },
-  textAmber: { color: '#92400E' },
-  timeLabelText: { fontSize: 11, color: '#9CA3AF', fontWeight: '500' },
-  incidentHeadline: { fontSize: 15, fontWeight: '700', color: '#1F2937', marginTop: 4 },
-  symptomSummaryText: { fontSize: 13, color: '#6B7280', lineHeight: 18, marginVertical: 4 },
-  locationFooterMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
-  distanceMetricText: { fontSize: 12, fontWeight: '600', color: '#4B5563', marginLeft: 4 },
-  addressStringText: { fontSize: 12, color: '#9CA3AF', flex: 1 },
-})

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, Text, Pressable, StyleSheet, useWindowDimensions } from 'react-native';
-import { Link, Slot } from 'expo-router';
+import { Link, Slot, Stack } from 'expo-router';
 import { Menu, X } from 'lucide-react-native';
 
 export default function Navbar() {
@@ -70,7 +70,7 @@ export default function Navbar() {
         />
       )}
 
-      <Slot />
+      <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }} />
     </>
   );
 }
