@@ -2,11 +2,14 @@
 
 ## TODO
 - [ ] Shareable links.
-- [ ] Payment gateway.
 - [ ] Volunteer rewards.
 - [ ] Live tracking.
 - [ ] Move high risk features to backend.
-- [ ] Gemini api integration
+- [x] Gemini api integration
 - [ ] Nearby clinic direct contact.
 - [ ] List of nearby free NGOs.
 - [ ] Home Remedy.
+- [ ] Volunteer Verification.
+- [ ] Case specific donations in a separate donation section in app.
+- [ ] Low network fallback.
+- [ ] Anonymous reports.
