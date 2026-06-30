@@ -35,7 +35,7 @@
     "expo-status-bar": "~56.0.4",
     "expo-symbols": "~56.0.6",
     "expo-system-ui": "~56.0.5",
-    "expo-web-browser": "~56.0.5",
+    "expo-web-browser": "~57.0.0",
     "firebase": "^12.15.0",
     "lucide-react-native": "^0.510.0",
     "nativewind": "^5.0.0-preview.2",
