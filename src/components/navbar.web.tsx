@@ -26,6 +26,11 @@ export default function Navbar() {
                 <Text className="text-[15px] text-black font-medium">Nearby Reports</Text>
               </Pressable>
             </Link>
+            <Link href="/profile" asChild>
+              <Pressable className="py-3">
+                <Text className="text-[15px] text-black font-medium">Profile</Text>
+              </Pressable>
+            </Link>
           </View>
 
           <Pressable className="flex md:hidden p-1" onPress={() => setIsOpen(!isOpen)}>
@@ -45,11 +50,7 @@ export default function Navbar() {
                 <Text className="text-[15px] text-black font-medium">Nearby</Text>
               </Pressable>
             </Link>
-            <Link href="/landing" asChild onPress={closeMenu}>
-              <Pressable className="py-3">
-                <Text className="text-[15px] text-black font-medium">Landing Page</Text>
-              </Pressable>
-            </Link>
+            
           </View>
         )}
       </View>

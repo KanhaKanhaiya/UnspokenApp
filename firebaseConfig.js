@@ -1,15 +1,14 @@
-import { getApp, initializeApp, getApps } from '@firebase/app';
+import { getApp, initializeApp, getApps } from 'firebase/app';
 import {
   getReactNativePersistence,
-  browserLocalPersistence,
   getAuth,
   initializeAuth
-} from '@firebase/auth';
+} from 'firebase/auth';
 //import { initializeAuth } from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import { getDatabase } from '@firebase/database';
-import { getAI, getGenerativeModel, GoogleAIBackend, Schema } from "@firebase/ai";
+import { getDatabase } from 'firebase/database';
+import { getAI, getGenerativeModel, GoogleAIBackend, Schema } from "firebase/ai";
 import { installAbortSignalPolyfill } from 'abort-signal-polyfill';
 
 const firebaseConfig = {
@@ -19,15 +18,21 @@ const firebaseConfig = {
   storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID
+  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  databaseURL: process.env.EXPO_PUBLIC_FIREBASE_DATABASE_URL
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
+const app = initializeApp(firebaseConfig)
 
 installAbortSignalPolyfill()
 
-const auth = initializeAuth(app, {
-    persistence: Platform.OS === "web" ? browserLocalPersistence : getReactNativePersistence(AsyncStorage),
+let auth
+
+if (Platform.OS === "web")
+auth = getAuth(app)
+else
+auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage),
   });
 
 const database = getDatabase(app);

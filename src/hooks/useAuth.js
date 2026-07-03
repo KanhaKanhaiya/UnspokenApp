@@ -8,7 +8,6 @@ import {
     signOut
 } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
-import { getAuth } from 'firebase/auth';
 
 let GoogleOneTapSignIn = null;
 let isNoSavedCredentialFoundResponse = null;

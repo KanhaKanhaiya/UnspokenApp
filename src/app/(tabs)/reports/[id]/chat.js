@@ -5,7 +5,6 @@ import {
     FlatList,
     KeyboardAvoidingView,
     Platform,
-    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
@@ -13,8 +12,10 @@ import {
 } from 'react-native';
 
 import { router, useLocalSearchParams } from 'expo-router';
-import { limitToLast, onValue, orderByChild, push, query, ref } from 'firebase/database';
+import { limitToLast, onValue, orderByChild, push, query, ref, serverTimestamp } from 'firebase/database';
 import { auth, database } from '../../../../../firebaseConfig';
+
+const KeyboardWrapper = Platform.OS === 'web' ? View : KeyboardAvoidingView;
 
 export default function Chat() {
   const { id } = useLocalSearchParams();
@@ -68,8 +69,7 @@ export default function Chat() {
       sender: auth.currentUser.displayName,
       senderUid: auth.currentUser.uid,
       text: chatMessage.trim(),
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      timestamp: Date.now()
+      timestamp: serverTimestamp()
     };
 
     try {
@@ -81,76 +81,79 @@ export default function Chat() {
   };
 
   const renderMessageBubble = ({ item }) => (
-    <View style={[styles.messageWrapper, item.isMe ? styles.messageWrapperMe : styles.messageWrapperOther]}>
+    <View className={`flex-row mb-4 max-w-[85%] ${item.isMe ? 'self-end flex-row-reverse' : 'self-start'}`}>
       {!item.isMe && (
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{item.sender.charAt(0)}</Text>
+        <View className="w-8 h-8 rounded-full bg-muted-foreground/30 items-center justify-center mr-2 ml-2">
+          <Text className="text-white text-sm font-bold">{item.sender.charAt(0)}</Text>
         </View>
       )}
-      <View style={[styles.messageBubble, item.isMe ? styles.messageBubbleMe : styles.messageBubbleOther]}>
-        <View style={styles.messageMeta}>
-          <Text style={[styles.messageSender, item.isMe && styles.messageSenderMe]}>{item.sender}</Text>
-          <Text style={styles.messageTime}>{item.time}</Text>
+      <View className={`p-3 rounded-2xl shadow-sm ${item.isMe ? 'bg-primary rounded-tr-sm' : 'bg-card border border-border rounded-tl-sm'}`}>
+        <View className="flex-row items-center mb-1 gap-1">
+          <Text className={`text-[11px] font-bold ${item.isMe ? 'text-white/90' : 'text-muted-foreground'}`}>{item.sender}</Text>
+          <Text className={`text-[10px] ${item.isMe ? 'text-white/70' : 'text-muted-foreground/70'}`}>{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
         </View>
-        <Text style={[styles.messageText, item.isMe && styles.messageTextMe]}>{item.text}</Text>
+        <Text className={`text-sm leading-5 ${item.isMe ? 'text-white' : 'text-foreground'}`}>{item.text}</Text>
       </View>
     </View>
   );
 
   return (
-    <KeyboardAvoidingView
-      style={styles.screen}
+    <KeyboardWrapper
+      style={{ flex: 1, backgroundColor: 'transparent' }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={styles.mainLayout}>
+      <View className="flex-1 w-full mx-auto bg-background shadow-sm">
 
-        <View style={styles.headerBar}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <View className="bg-primary flex-row items-center px-4 pt-12 pb-4 shadow-sm z-10">
+          <TouchableOpacity className="mr-4 p-1" onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <View>
-            <Text style={styles.headerTitle}>Chat</Text>
-            <Text style={styles.headerSubtitle}>Title</Text>
+          <View className="flex-col">
+            <Text className="text-white text-lg font-bold">Chat</Text>
+            <Text className="text-white/80 text-xs mt-0.5">Title</Text>
           </View>
         </View>
 
-        <FlatList
-          style={{ flex: 1, backgroundColor: '#F9FAFB' }}
-          data={messages}
-          keyExtractor={(item) => item.id}
-          renderItem={renderMessageBubble}
-          inverted={true}
-          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16 }}
-          showsVerticalScrollIndicator={false}
-          onEndReached={loadMoreHistory}
-          onEndReachedThreshold={0.2}
+        <View className="flex-1 bg-muted/30">
+          <FlatList
+            style={{ flex: 1 }}
+            data={messages}
+            keyExtractor={(item) => item.id}
+            renderItem={renderMessageBubble}
+            inverted={true}
+            contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16 }}
+            showsVerticalScrollIndicator={false}
+            onEndReached={loadMoreHistory}
+            onEndReachedThreshold={0.2}
 
-          ListEmptyComponent={
-            <View style={styles.emptyChatContainer}>
-              <Ionicons name="chatbubbles-outline" size={48} color="#D1D5DB" />
-              <Text style={styles.emptyChatText}>No messages yet.</Text>
-            </View>
-          }
+            ListEmptyComponent={
+              <View className="flex-1 items-center justify-center py-10">
+                <Ionicons name="chatbubbles-outline" size={48} color="#D1D5DB" />
+                <Text className="text-muted-foreground text-sm font-semibold mt-3">No messages yet.</Text>
+              </View>
+            }
 
-          ListFooterComponent={
-            loadingHistory ? <ActivityIndicator size="small" color="#0F766E" style={{ marginVertical: 12 }} /> : null
-          }
-        />
+            ListFooterComponent={
+              loadingHistory ? <ActivityIndicator size="small" color="#0F766E" style={{ marginVertical: 12 }} /> : null
+            }
+          />
+        </View>
 
-        <View style={styles.chatInputContainer}>
-          <TouchableOpacity style={styles.attachBtn}>
+        <View className={`flex-row items-center p-3 bg-background border-t border-border ${Platform.OS === 'ios' ? 'pb-6' : 'pb-3'}`}>
+          <TouchableOpacity className="p-2">
             <Ionicons name="location-outline" size={22} color="#6B7280" />
           </TouchableOpacity>
           <TextInput
-            style={styles.chatInput}
+            className="flex-1 bg-muted rounded-2xl px-4 py-2.5 text-sm text-foreground max-h-25"
             placeholder="Type a message..."
             placeholderTextColor="#9CA3AF"
             value={chatMessage}
             onChangeText={setChatMessage}
             onSubmitEditing={handleSendMessage}
+            multiline
           />
           <TouchableOpacity
-            style={[styles.sendBtn, chatMessage.trim().length > 0 && styles.sendBtnActive]}
+            className={`ml-2 w-10 h-10 rounded-full items-center justify-center transition-colors ${chatMessage.trim().length > 0 ? 'bg-primary' : 'bg-muted'}`}
             onPress={handleSendMessage}
           >
             <Ionicons name="send" size={16} color={chatMessage.trim().length > 0 ? "#FFFFFF" : "#9CA3AF"} />
@@ -158,40 +161,6 @@ export default function Chat() {
         </View>
 
       </View>
-    </KeyboardAvoidingView>
+    </KeyboardWrapper>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F3F4F6' },
-  mainLayout: { flex: 1, alignSelf: 'center', width: '100%', backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.1, shadowRadius: 10 },
-
-  headerBar: { backgroundColor: '#0F766E', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 42, paddingBottom: 16 },
-  backButton: { marginRight: 16 },
-  headerTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '700' },
-  headerSubtitle: { color: '#CCFBF1', fontSize: 12, marginTop: 2 },
-
-  emptyChatContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 40 },
-  emptyChatText: { color: '#9CA3AF', fontSize: 14, fontWeight: '600', marginTop: 12 },
-
-  messageWrapper: { flexDirection: 'row', marginBottom: 16, maxWidth: '85%' },
-  messageWrapperMe: { alignSelf: 'flex-end', flexDirection: 'row-reverse' },
-  messageWrapperOther: { alignSelf: 'flex-start' },
-  avatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#94A3B8', alignItems: 'center', justifyContent: 'center', marginRight: 8, marginLeft: 8 },
-  avatarText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
-  messageBubble: { padding: 12, borderRadius: 16 },
-  messageBubbleOther: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E5E7EB', borderTopLeftRadius: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
-  messageBubbleMe: { backgroundColor: '#0D9488', borderTopRightRadius: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 1 },
-  messageMeta: { flexDirection: 'row', alignItems: 'center', marginBottom: 4, gap: 6 },
-  messageSender: { fontSize: 11, fontWeight: '700', color: '#4B5563' },
-  messageSenderMe: { color: '#CCFBF1' },
-  messageTime: { fontSize: 10, color: '#9CA3AF' },
-  messageText: { fontSize: 14, color: '#1F2937', lineHeight: 20 },
-  messageTextMe: { color: '#FFFFFF' },
-
-  chatInputContainer: { flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingBottom: Platform.OS === 'ios' ? 24 : 12 },
-  attachBtn: { padding: 8 },
-  chatInput: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, fontSize: 14, color: '#111827', maxHeight: 100 },
-  sendBtn: { marginLeft: 8, width: 36, height: 36, borderRadius: 18, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' },
-  sendBtnActive: { backgroundColor: '#059669' },
-});

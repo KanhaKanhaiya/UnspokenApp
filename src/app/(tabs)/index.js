@@ -20,7 +20,7 @@ import { Textarea, TextareaInput } from '@/components/ui/textarea';
 import { Input, InputField } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Image } from '@/components/ui/image';
-//import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/src/hooks/useAuth';
 
 let WebView = null;
 if (Platform.OS !== 'web') {
@@ -83,12 +83,14 @@ export default function Report() {
     });
   };
 
-  // const { loginWithGoogle } = useAuth()
-  // useEffect(() => {
-  //   loginWithGoogle().then((data) => {
+   const { loginWithGoogle, user, loading } = useAuth()
+   useEffect(() => {
+    if (!user && !loading)
+setTimeout(() => {
+     loginWithGoogle().then((data) => {
 
-  //   })
-  // }, [])
+     })}, 5000)
+   }, [user, loading])
 
   const [isLocating, setIsLocating] = useState(false);
   const [address, setAddress] = useState('');
@@ -154,8 +156,8 @@ export default function Report() {
       <div id="map"></div>
       <script>
         const hasLocation = ${Boolean(location.latitude && location.longitude)};
-        const lat = ${location.latitude || 20.5937};
-        const lng = ${location.longitude || 78.9629};
+        const lat = ${location.latitude};
+        const lng = ${location.longitude};
         const map = L.map('map', { zoomControl: true }).setView([lat, lng], hasLocation ? 15 : 4);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
@@ -259,7 +261,7 @@ export default function Report() {
 
   return (
     <ScrollView className="flex-1 bg-background" contentContainerStyle={{ alignItems: 'center', paddingVertical: 42, paddingHorizontal: 16 }}>
-      <Box className={`w-full ${isLarge ? 'max-w-[850px]' : ''}`}>
+      <Box className={`w-full ${isLarge ? 'max-w-212.5' : ''}`}>
         
         <VStack className="items-center mb-8">
           <Box className="bg-primary/10 px-3 py-1.5 rounded-full mb-3 flex-row items-center">
@@ -278,7 +280,7 @@ export default function Report() {
           
           <HStack className="flex-wrap gap-3">
             <Pressable 
-              className={`flex-1 min-w-[240px] flex-row items-start border-2 rounded-xl p-4 ${animalType === 'stray' ? 'border-primary bg-primary/5' : 'border-border bg-background'}`} 
+              className={`flex-1 min-w-60 flex-row items-start border-2 rounded-xl p-4 ${animalType === 'stray' ? 'border-primary bg-primary/5' : 'border-border bg-background'}`} 
               onPress={() => setAnimalType('stray')}
             >
               <VStack className="ml-3 flex-1">
@@ -288,7 +290,7 @@ export default function Report() {
             </Pressable>
 
             <Pressable 
-              className={`flex-1 min-w-[240px] flex-row items-start border-2 rounded-xl p-4 ${animalType === 'pet' ? 'border-primary bg-primary/5' : 'border-border bg-background'}`} 
+              className={`flex-1 min-w-60 flex-row items-start border-2 rounded-xl p-4 ${animalType === 'pet' ? 'border-primary bg-primary/5' : 'border-border bg-background'}`} 
               onPress={() => setAnimalType('pet')}
             >
               <VStack className="ml-3 flex-1">
@@ -349,7 +351,7 @@ export default function Report() {
 
         <Box className="bg-card rounded-2xl p-6 mb-5 border border-border shadow-sm">
           <Heading className="text-sm text-foreground mb-4 font-bold">3. Describe Symptoms</Heading>
-          <Textarea className="bg-background border-border rounded-xl min-h-[120px]">
+          <Textarea className="bg-background border-border rounded-xl min-h-30">
             <TextareaInput 
               placeholder="Example: Destroyed body, damaged head, coughing, vomiting blood etc." 
               className="text-foreground" 
@@ -380,7 +382,7 @@ export default function Report() {
               placeholderTextColor="gray" 
             />
           </Input>
-          <Box className="h-[180px] rounded-xl overflow-hidden border border-border">
+          <Box className="h-45 rounded-xl overflow-hidden border border-border">
             {Platform.OS === 'web' ? React.createElement('iframe', {
               srcDoc: generateMapHtml(),
               style: { width: '100%', height: '100%', border: 'none' },
@@ -398,12 +400,12 @@ export default function Report() {
 
         <Button 
           size="xl" 
-          className={`py-4 rounded-xl mb-6 border-0 ${checkValidity && !isAnalyzing ? 'bg-destructive' : 'bg-muted'}`}
+          className={`py-4 rounded-xl mb-6 border-0 ${checkValidity && !isAnalyzing ? 'bg-foreground' : 'bg-muted'}`}
           disabled={!checkValidity || isAnalyzing} 
           onPress={handleSendAlert}
         >
           {isAnalyzing ? (
-            <ButtonSpinner color="white" />
+            <ButtonSpinner color="black" />
           ) : (
             <ButtonText className="text-white text-base font-bold">Send Alert & Run AI Diagnosis</ButtonText>
           )}
@@ -451,7 +453,7 @@ export default function Report() {
             </VStack>
           ) : (
             <VStack className="items-center justify-center py-6">
-              <Text className="text-center text-muted-foreground text-sm leading-relaxed mt-3 max-w-[500px]">
+              <Text className="text-center text-muted-foreground text-sm leading-relaxed mt-3 max-w-125">
                 AI diagnosis.
               </Text>
             </VStack>

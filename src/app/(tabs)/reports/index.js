@@ -184,14 +184,14 @@ cachedReports = data.data
   return (
     <Box className="flex-1 bg-background">
       <ScrollView contentContainerStyle={{ alignItems: 'center', paddingVertical: 40, paddingHorizontal: 16 }} showsVerticalScrollIndicator={false}>
-        <Box className={`w-full ${isLarge ? 'max-w-[850px]' : ''}`}>
+        <Box className={`w-full ${isLarge ? 'max-w-212.5' : ''}`}>
           
           <VStack className="mb-5 px-1">
             <Heading className="text-3xl font-extrabold text-foreground tracking-tight">Nearby Rescues</Heading>
             <Text className="text-sm text-muted-foreground mt-1.5 font-medium">Monitoring {reports.length} emergencies within 5km</Text>
           </VStack>
           
-          <Box className={`w-full bg-muted rounded-2xl overflow-hidden mb-6 border border-border ${isLarge ? 'h-[360px]' : 'h-[260px]'}`}>
+          <Box className={`w-full bg-muted rounded-2xl overflow-hidden mb-6 border border-border ${isLarge ? 'h-90' : 'h-65'}`}>
             {Platform.OS === 'web' ? (
               React.createElement('iframe', {
                 srcDoc: generateWebMapHtml(),
