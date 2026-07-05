@@ -84,13 +84,13 @@ export default function Report() {
   };
 
    const { loginWithGoogle, user, loading } = useAuth()
-   useEffect(() => {
+/*   useEffect(() => {
     if (!user && !loading)
 setTimeout(() => {
      loginWithGoogle().then((data) => {
 
      })}, 5000)
-   }, [user, loading])
+   }, [user, loading])*/
 
   const [isLocating, setIsLocating] = useState(false);
   const [address, setAddress] = useState('');
@@ -192,16 +192,24 @@ setTimeout(() => {
       }
     };
   }
-  const handleSendAlert = async () => {
+  const handleSendAlert = async (loggedInUser = null) => {
+if (loading) return;
     setIsAnalysing(true);
     setAIDiagnosis(null);
+if (!user && !loggedInUser) {
+await loginWithGoogle((newUser) => handleSendAlert(newUser))
+return;
+}
+let localUser = user
+if (!user && loggedInUser)
+localUser = loggedInUser
     const pointLocation = `POINT(${location.longitude} ${location.latitude})`;
     try {
       let base64Image;
       if (Platform.OS === "web") {
         const response = await fetch(imageUri);
         base64Image = await response.blob();
-      } else 
+      } else
         base64Image = decode(await new File(imageUri).base64())
       if (!(animalType === "pet" && PetNGORequired === "no")) {
       const {
@@ -211,8 +219,10 @@ setTimeout(() => {
         symptoms: symptoms,
         type: animalType,
         location: pointLocation,
+        user: localUser.uid,
         image: ""
       }]).select();
+      //Add anonymous report option.
       if (insertError) throw insertError;
       const createdReport = insertedReports?.[0];
       if (!createdReport) throw new Error('Report creation did not return a row.');
@@ -235,7 +245,7 @@ setTimeout(() => {
       try {
         //const model = await getAiModel();
         const imagePart = await blobToGenerativePart(base64Image);
-        const geminiResponse = await model.generateContent(['You are an excellent vet. DO NOT STATE that you are AI. State steps for a volunteer to cure and/or provide first aid in simple language to it with suspected illness/injury etc. Do not help in anything else. You are only a vet working for "Unspoken."', imagePart, symptoms.trim() !== "" ? "User provided description : " + symptoms : ""]);
+        const geminiResponse = await model.generateContent(['You are an excellent vet. DO NOT STATE that you are AI. State extremely short steps for a volunteer to cure and/or provide first aid in simple language to it with suspected illness/injury etc. Do not help in anything else. You are only a vet working for "Unspoken."' + (symptoms.trim() !== "" ? "User provided description : " + symptoms : ""), imagePart]);
         const rawAIResponse = geminiResponse?.response?.text?.() ?? '';
         const parsed = JSON.parse(rawAIResponse);
         const diagnosis = parsed?.characters?.[0] ?? null;
@@ -257,6 +267,8 @@ setTimeout(() => {
     } finally {
       setIsAnalysing(false);
     }
+// TODO(Ask AI if its worth publishing or not)
+// TODO(Prevent multiple reports with same data. Also disable button until any data changes.
   };
 
   return (
@@ -401,13 +413,13 @@ setTimeout(() => {
         <Button 
           size="xl" 
           className={`py-4 rounded-xl mb-6 border-0 ${checkValidity && !isAnalyzing ? 'bg-foreground' : 'bg-muted'}`}
-          disabled={!checkValidity || isAnalyzing} 
-          onPress={handleSendAlert}
+          disabled={!checkValidity || isAnalyzing || loading}
+          onPress={() => handleSendAlert()}
         >
           {isAnalyzing ? (
             <ButtonSpinner color="black" />
           ) : (
-            <ButtonText className="text-white text-base font-bold">Send Alert & Run AI Diagnosis</ButtonText>
+            <ButtonText className="text-white text-base font-bold">{ !loading && user ? ((animalType === "pet" && PetNGORequired.includes("yes")) || animalType === "stray" ? "Send Alert & " : "" ) + "Run AI Diagnosis" : "Sign In & Proceed"}</ButtonText>
           )}
         </Button>
 
@@ -447,7 +459,7 @@ setTimeout(() => {
               <HStack className="items-center bg-primary/10 p-3 rounded-md mt-5 border border-primary/20">
                 <Text className="text-xs text-primary flex-1">
                   <Text className="font-bold text-primary">NGOs Alerted: </Text>
-                  {aiDiagnosis.ngoAlertStatus}
+                  {aiDiagnosis.extremelyShortAttentionGrabbingTitleForPublicReport}
                 </Text>
               </HStack>
             </VStack>

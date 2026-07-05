@@ -390,7 +390,7 @@ export default function RescueDetails() {
 
                     <VStack className="mb-4">
                         <Pressable 
-                            className="w-full bg-primary py-4 rounded-2xl items-center flex-row justify-center active:opacity-80 shadow-sm" 
+                            className=" w-full bg-primary py-4 rounded-2xl items-center flex-row justify-center active:opacity-80 shadow-sm" 
                             onPress={() => router.navigate(`./${id}/chat`)}
                         >
                             <Ionicons name="chatbubbles" size={20} color="white" />

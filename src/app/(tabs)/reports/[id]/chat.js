@@ -14,10 +14,12 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import { limitToLast, onValue, orderByChild, push, query, ref, serverTimestamp } from 'firebase/database';
 import { auth, database } from '../../../../../firebaseConfig';
+import { useAuth } from "@/src/hooks/useAuth"
 
 const KeyboardWrapper = Platform.OS === 'web' ? View : KeyboardAvoidingView;
 
 export default function Chat() {
+const { user } = useAuth()
   const { id } = useLocalSearchParams();
   //TODO(Add null check)
 
@@ -139,7 +141,7 @@ export default function Chat() {
           />
         </View>
 
-        <View className={`flex-row items-center p-3 bg-background border-t border-border ${Platform.OS === 'ios' ? 'pb-6' : 'pb-3'}`}>
+{user ?        <View className={`flex-row items-center p-3 bg-background border-t border-border ${Platform.OS === 'ios' ? 'pb-6' : 'pb-3'}`}>
           <TouchableOpacity className="p-2">
             <Ionicons name="location-outline" size={22} color="#6B7280" />
           </TouchableOpacity>
@@ -158,7 +160,7 @@ export default function Chat() {
           >
             <Ionicons name="send" size={16} color={chatMessage.trim().length > 0 ? "#FFFFFF" : "#9CA3AF"} />
           </TouchableOpacity>
-        </View>
+        </View> : <Text>Login to send messages.</Text> }
 
       </View>
     </KeyboardWrapper>

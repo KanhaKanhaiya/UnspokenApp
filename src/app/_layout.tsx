@@ -14,9 +14,11 @@ export default function RootLayout() {
   {/* <GluestackUIProvider> */}
 
   <GluestackUIProvider>
+
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
+    
   </GluestackUIProvider>
   {/* </GluestackUIProvider> */}
   {/* </SafeAreaView> */}

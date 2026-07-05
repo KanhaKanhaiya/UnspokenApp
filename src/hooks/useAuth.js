@@ -26,17 +26,21 @@ export const useAuth = () => {
     const [loading, setLoading] = useState(true);
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+setLoading(true)
             setUser(currentUser);
             setLoading(false);
         });
         return unsubscribe;
     }, []);
 
-    const loginWithGoogle = async () => {
+    const loginWithGoogle = async (callbackFunction) => {
         try {
             if (Platform.OS === 'web') {
                 const provider = new GoogleAuthProvider();
-                return await signInWithPopup(auth, provider);
+                const response = await signInWithPopup(auth, provider)
+setUser(response.user)
+callbackFunction(response.user)
+return;
             }
 
             // if (isExpoGo)

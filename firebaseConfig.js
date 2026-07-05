@@ -47,7 +47,7 @@ const jsonSchema = Schema.object({
           condition: Schema.string(),
           confidence: Schema.number(),
           advice: Schema.string(),
-          ngoAlertStatus: Schema.string(),
+          extremelyShortAttentionGrabbingTitleForPublicReport: Schema.string(),
         },
       }),
     }),

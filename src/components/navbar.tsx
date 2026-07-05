@@ -1,8 +1,11 @@
 import { Tabs } from 'expo-router';
 import { Feather, Ionicons, FontAwesome } from '@expo/vector-icons';
 import { View, Platform, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function Navbar() {
+  const insets = useSafeAreaInsets()
+
   return (
     <Tabs
       screenOptions={{
@@ -13,8 +16,8 @@ export default function Navbar() {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#F3F4F6',
-          height: Platform.OS === 'ios' ? 85 : 65,
-          paddingBottom: Platform.OS === 'ios' ? 25 : 10,
+          height: 65 + insets.bottom,
+          paddingBottom: insets.bottom,
           paddingTop: 8,
           elevation: 10,
           shadowColor: '#000',
@@ -38,16 +41,7 @@ export default function Navbar() {
       />
       
       <Tabs.Screen
-        name="reports"
-        options={{
-          title: 'Nearby Reports',
-          tabBarIcon: ({ color }) => <Feather size={22} name="file-text" color={color} />,
-        }}
-      />
-
-
-      <Tabs.Screen
-        name="create"
+        name="profile"
         options={{
           title: '',
           tabBarIcon: () => (
@@ -55,6 +49,14 @@ export default function Navbar() {
               <Ionicons name="paw" size={24} color="#FFFFFF" />
             </View>
           ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="reports"
+        options={{
+          title: 'Nearby Reports',
+          tabBarIcon: ({ color }) => <Feather size={22} name="file-text" color={color} />,
         }}
       />
 
@@ -67,7 +69,7 @@ export default function Navbar() {
       />
 
       <Tabs.Screen
-        name="profile"
+        name="profile1"
         options={{
           title: 'Profile',
           tabBarIcon: ({ color }) => <Feather size={22} name="user" color={color} />,
