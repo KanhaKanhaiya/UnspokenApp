@@ -1,0 +1,26 @@
+{
+  "name": "unspoken",
+  "version": "0.0.1",
+  "description": "",
+  "homepage": "https://github.com/KanhaKanhaiya/UnspokenApp#readme",
+  "bugs": {
+    "url": "https://github.com/KanhaKanhaiya/UnspokenApp/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KanhaKanhaiya/UnspokenApp.git"
+  },
+  "license": "AGPL-3.0",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
