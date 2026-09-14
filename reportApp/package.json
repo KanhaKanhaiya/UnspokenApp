@@ -39,7 +39,7 @@
     "firebase": "^12.15.0",
     "lucide-react-native": "^0.510.0",
     "nativewind": "^5.0.0-preview.2",
-    "react": "19.2.3",
+    "react": "19.3.0",
     "react-aria": "^3.50.0",
     "react-dom": "19.2.3",
     "react-native": "0.86.0",
@@ -61,7 +61,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.1",
-    "@types/react": "~19.2.2",
+    "@types/react": "~19.3.0",
     "babel-plugin-module-resolver": "^5.0.3",
     "postcss": "^8.5.15",
     "prettier-plugin-tailwindcss": "^0.5.14",
